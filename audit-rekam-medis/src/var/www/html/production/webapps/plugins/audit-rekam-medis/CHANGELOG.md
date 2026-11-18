@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111812] - 2026-11-18
+### Changed
+- Penyesuaian ukuran icon tab header audit RME menjadi 20px (proporsional dan berwarna biru rekam medis) yang terisolasi khusus pada elemen `.x-tab-icon-el.fa-clipboard-check` tanpa mengganggu struktur/layout ukuran tab ExtJS.
+
 ## [1.0.0-26111811] - 2026-11-18
 ### Changed & Fixed
 - Mengembalikan ukuran tab header Audit RME ke ukuran standar bawaan ExtJS/SIMpel (menghapus CSS paksaan tab yang menyebabkan tab melebar hingga 100%).
