@@ -8,8 +8,10 @@
             Ext.util.CSS.createStyleSheet(
                 '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
                 '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 22px !important; height: 22px !important; font-size: 14px !important; line-height: 22px !important; text-align: center !important; margin-left: 10px !important; border-radius: 4px !important; opacity: 0.7 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; color: #dc2626 !important; transform: scale(1.1) !important; }',
+                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 16px !important; height: 16px !important; font-size: 0 !important; line-height: 0 !important; color: transparent !important; text-indent: -9999px !important; overflow: hidden !important; text-align: center !important; margin-left: 10px !important; border-radius: 3px !important; opacity: 0.6 !important; display: inline-block !important; vertical-align: middle !important; transition: all 0.2s ease !important; cursor: pointer !important; position: relative !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:before { font-family: FontAwesome !important; content: "\\f00d" !important; font-size: 13px !important; line-height: 16px !important; color: #64748b !important; text-indent: 0 !important; float: none !important; display: block !important; width: 100% !important; height: 100% !important; text-align: center !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover:before { color: #dc2626 !important; }',
                 'audit-rme-tab-style'
             );
         }
@@ -422,18 +424,35 @@ Ext.define("auditrekammedis.Workspace", {
     ui: "panel-blue",
 
     tabConfig: {
-        cls: "audit-rme-workspace-tab"
+        cls: "audit-rme-workspace-tab",
+        closeText: ""
     },
 
     listeners: {
         afterrender: function(p) {
             if (p.tab) {
                 p.tab.addCls("audit-rme-workspace-tab");
+                if (p.tab.closeEl && p.tab.closeEl.dom) {
+                    var el = p.tab.closeEl.dom;
+                    for (var i = el.childNodes.length - 1; i >= 0; i--) {
+                        if (el.childNodes[i].nodeType === 3) {
+                            el.removeChild(el.childNodes[i]);
+                        }
+                    }
+                }
             }
         },
         activate: function(p) {
             if (p.tab) {
                 p.tab.addCls("audit-rme-workspace-tab");
+                if (p.tab.closeEl && p.tab.closeEl.dom) {
+                    var el = p.tab.closeEl.dom;
+                    for (var i = el.childNodes.length - 1; i >= 0; i--) {
+                        if (el.childNodes[i].nodeType === 3) {
+                            el.removeChild(el.childNodes[i]);
+                        }
+                    }
+                }
             }
         }
     },
@@ -502,8 +521,10 @@ Ext.define("auditrekammedis.Workspace", {
                 // Tab Icon & Tab Balance Styling for Audit RME
                 '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
                 '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 22px !important; height: 22px !important; font-size: 14px !important; line-height: 22px !important; text-align: center !important; margin-left: 10px !important; border-radius: 4px !important; opacity: 0.7 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; color: #dc2626 !important; transform: scale(1.1) !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 16px !important; height: 16px !important; font-size: 0 !important; line-height: 0 !important; color: transparent !important; text-indent: -9999px !important; overflow: hidden !important; text-align: center !important; margin-left: 10px !important; border-radius: 3px !important; opacity: 0.6 !important; display: inline-block !important; vertical-align: middle !important; transition: all 0.2s ease !important; cursor: pointer !important; position: relative !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:before { font-family: FontAwesome !important; content: "\\f00d" !important; font-size: 13px !important; line-height: 16px !important; color: #64748b !important; text-indent: 0 !important; float: none !important; display: block !important; width: 100% !important; height: 100% !important; text-align: center !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover:before { color: #dc2626 !important; }' +
                 '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
                 'audit-rme-custom-style'
             );

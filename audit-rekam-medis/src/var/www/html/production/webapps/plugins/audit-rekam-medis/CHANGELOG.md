@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111809] - 2026-11-18
+### Fixed
+- Menghilangkan teks "Tutup tab" yang bocor/tampil pada tab header modul Audit Rekam Medis melalui sanitasi text node DOM, `closeText: ""`, dan isolasi styling font/pseudo-elemen ikon FontAwesome.
+
 ## [1.0.0-26111808] - 2026-11-18
 ### Fixed
 - Perbaikan filter status kunjungan & pendaftaran (`k.STATUS != 0` dan `p.STATUS != 0`) agar mencakup pasien aktif maupun yang sudah selesai diperiksa dokter (`STATUS = 2`), mencegah data kosong saat memfilter poli atau tanggal lampau.
