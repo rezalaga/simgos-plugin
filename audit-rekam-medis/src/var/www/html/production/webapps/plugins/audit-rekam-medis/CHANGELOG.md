@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111813] - 2026-11-18
+### Changed
+- Menghilangkan tombol ekstra 'Tutup Form' pada bilah header modal editor berkas RME, menyisakan tombol kontrol standar window (maximize & close).
+
 ## [1.0.0-26111812] - 2026-11-18
 ### Changed
 - Penyesuaian ukuran icon tab header audit RME menjadi 20px (proporsional dan berwarna biru rekam medis) yang terisolasi khusus pada elemen `.x-tab-icon-el.fa-clipboard-check` tanpa mengganggu struktur/layout ukuran tab ExtJS.

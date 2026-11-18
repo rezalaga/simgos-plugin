@@ -251,18 +251,6 @@ Ext.define("auditrekammedis.WorkspaceController", {
             layout: "fit",
             cls: "rme-fastlane-window",
             ui: "window-blue",
-            header: {
-                titlePosition: 0,
-                items: [{
-                    xtype: "button",
-                    text: '<i class="x-fa fa-times"></i> Tutup Form',
-                    cls: "btn-fastlane-close",
-                    ui: "soft-red",
-                    handler: function() {
-                        win.close();
-                    }
-                }]
-            },
             items: [{
                 xtype: targetXtype,
                 reference: "targetRmeWorkspace"
@@ -476,7 +464,6 @@ Ext.define("auditrekammedis.Workspace", {
             '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
             '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
             '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
-            '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }' +
             '.x-tab-icon-el.fa-clipboard-check { font-size: 20px !important; width: 22px !important; height: 22px !important; line-height: 22px !important; color: #1e40af !important; vertical-align: middle !important; margin-right: 6px !important; }' +
             '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
             'audit-rme-custom-style'
