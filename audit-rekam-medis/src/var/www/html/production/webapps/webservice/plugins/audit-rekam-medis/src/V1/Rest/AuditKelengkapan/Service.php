@@ -77,6 +77,10 @@ class Service extends DBService
         if ($jenisKunjungan !== 'ALL' && $jenisKunjungan !== '') {
             $jkVal = (int) $jenisKunjungan;
             $whereClauses[] = "r.JENIS_KUNJUNGAN = $jkVal";
+        } else {
+            // Batasi hanya pelayanan klinis utama (Rawat Jalan, IGD, Ranap, HD)
+            // Mengecualikan kunjungan order penunjang (Farmasi, Lab, Radiologi, PA, dll)
+            $whereClauses[] = "r.JENIS_KUNJUNGAN IN (1, 2, 3, 7)";
         }
 
         if (!empty($ruangan)) {
@@ -268,7 +272,7 @@ class Service extends DBService
             'kode' => 'TTV',
             'nama' => 'Tanda Vital',
             'status' => $ttvTerisi ? 1 : 0,
-            'xtype' => 'rekammedis-anamnesis-workspace'
+            'xtype' => 'rekammedis-pemerikasaan-umum-tandavital-workspace'
         ];
         $totalBobotWajib += 10;
         if ($ttvTerisi) $totalBobotTerisi += 10;

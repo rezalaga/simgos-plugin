@@ -1,6 +1,6 @@
 Name:           simpel-audit-rekam-medis
 Version:        1.0.0
-Release:        26111804
+Release:        26111805
 Summary:        Plugin Audit Kelengkapan dan Kualitas Rekam Medis Elektronik SIMGoS2
 License:        GPL
 Group:          Applications/Productivity

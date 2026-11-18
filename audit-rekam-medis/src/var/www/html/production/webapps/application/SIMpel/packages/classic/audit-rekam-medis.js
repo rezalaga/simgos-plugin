@@ -183,25 +183,48 @@ Ext.define("auditrekammedis.WorkspaceController", {
             targetXtype = docInfo.xtype || "rekammedis-resume-workspace",
             namaDoc = docInfo.nama || "Dokumen Rekam Medis";
 
-        var kjgnModel = Ext.create("data.model.Model", {
+        var kjgnModel = Ext.create("data.model.Kunjungan", {
             NOMOR: record.get("KUNJUNGAN"),
             NOPEN: record.get("NOPEN"),
-            NORM: record.get("NORM"),
             RUANGAN: record.get("RUANGAN"),
             FINAL_HASIL: record.get("FINAL_HASIL"),
             MASUK: record.get("MASUK"),
             KELUAR: record.get("KELUAR"),
-            DPJP: record.get("DPJP")
+            DPJP: record.get("DPJP"),
+            STATUS: record.get("STATUS_KUNJUNGAN") || 1,
+            REFERENSI: {
+                PENDAFTARAN: {
+                    NOMOR: record.get("NOPEN"),
+                    NORM: record.get("NORM")
+                },
+                RUANGAN: {
+                    ID: record.get("RUANGAN"),
+                    DESKRIPSI: record.get("NAMA_RUANGAN")
+                }
+            }
         });
 
         var win = Ext.create("Ext.window.Window", {
-            title: '<i class="x-fa fa-edit"></i> [Fast-Lane RME] ' + namaDoc + ' — ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
-            width: "88%",
-            height: "88%",
+            title: '<i class="x-fa fa-edit" style="color: #93c5fd; margin-right: 6px;"></i> [Fast-Lane RME] ' + namaDoc + ' — ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
+            width: "92%",
+            height: "90%",
             modal: true,
             maximizable: true,
             layout: "fit",
-            ui: "panel-blue",
+            cls: "rme-fastlane-window",
+            ui: "window-blue",
+            header: {
+                titlePosition: 0,
+                items: [{
+                    xtype: "button",
+                    text: '<i class="x-fa fa-times"></i> Tutup Form',
+                    cls: "btn-fastlane-close",
+                    ui: "soft-red",
+                    handler: function() {
+                        win.close();
+                    }
+                }]
+            },
             items: [{
                 xtype: targetXtype,
                 reference: "targetRmeWorkspace"
@@ -243,12 +266,25 @@ Ext.define("auditrekammedis.WorkspaceController", {
         htmlList += '</ul>';
 
         var win = Ext.create("Ext.window.Window", {
-            title: '<i class="x-fa fa-exclamation-triangle" style="color: #e74c3c;"></i> Deteksi Anomali Rekam Medis: ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
+            title: '<i class="x-fa fa-exclamation-triangle" style="color: #fca5a5; margin-right: 6px;"></i> Deteksi Anomali Rekam Medis: ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
             width: 650,
-            height: 380,
+            height: 400,
             modal: true,
             layout: "border",
-            ui: "panel-red",
+            cls: "rme-fastlane-window",
+            ui: "window-blue",
+            header: {
+                titlePosition: 0,
+                items: [{
+                    xtype: "button",
+                    text: '<i class="x-fa fa-times"></i> Tutup',
+                    cls: "btn-fastlane-close",
+                    ui: "soft-red",
+                    handler: function() {
+                        win.close();
+                    }
+                }]
+            },
             items: [
                 {
                     region: "north",
@@ -387,7 +423,19 @@ Ext.define("auditrekammedis.Workspace", {
                 '.badge-anomali-pending { background: #fff3df; color: #a86600; border: 1px solid #fde68a; }' +
 
                 '.progress-bar-bg { width: 100%; background: #e2e8f0; border-radius: 6px; height: 16px; overflow: hidden; position: relative; }' +
-                '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; transition: width 0.4s ease; }',
+                '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; transition: width 0.4s ease; }' +
+
+                // Fast-Lane Modal Styles
+                '.rme-fastlane-window { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important; border: 1px solid #1e3a8a !important; border-radius: 8px !important; overflow: hidden !important; }' +
+                '.rme-fastlane-window .x-window-header { background: #1e40af !important; min-height: 48px !important; padding: 10px 16px !important; border: none !important; }' +
+                '.rme-fastlane-window .x-window-header-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 26px !important; }' +
+                '.rme-fastlane-window .x-window-header-title .x-title-text { color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important; }' +
+                '.rme-fastlane-window .x-tool { width: 32px !important; height: 32px !important; margin-left: 8px !important; background: rgba(255, 255, 255, 0.22) !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
+                '.rme-fastlane-window .x-tool:hover { background: rgba(255, 255, 255, 0.4) !important; }' +
+                '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
+                '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
+                '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
+                '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }',
                 'audit-rme-custom-style'
             );
         }
