@@ -14,7 +14,7 @@ INSERT INTO `aplikasi`.`modules` (
     `PACKAGE_NAME` = VALUES(`PACKAGE_NAME`), 
     `MENU_HOME` = VALUES(`MENU_HOME`);
 
--- Berikan hak akses menu secara otomatis ke grup pengguna Rekam Medis / Admin
+-- 1. Berikan hak akses modul ke group pengguna Rekam Medis / Admin
 INSERT INTO `aplikasi`.`group_pengguna_akses_module` (`GROUP_PENGGUNA`, `MODUL`, `STATUS`)
 SELECT DISTINCT `GROUP_PENGGUNA`, '9035', 1
 FROM `aplikasi`.`group_pengguna_akses_module`
@@ -24,3 +24,14 @@ WHERE `MODUL` IN ('13', '9033', '1928')
       WHERE gpam2.GROUP_PENGGUNA = `aplikasi`.`group_pengguna_akses_module`.GROUP_PENGGUNA 
         AND gpam2.MODUL = '9035'
   );
+
+-- 2. Tambahkan hak akses modul ke akun pengguna aktif (pengguna_akses)
+INSERT INTO `aplikasi`.`pengguna_akses` (`PENGGUNA`, `GROUP_PENGGUNA_AKSES_MODULE`, `STATUS`)
+SELECT DISTINCT pa.PENGGUNA, gpam_9035.ID, 1
+FROM `aplikasi`.`pengguna_akses` pa
+JOIN `aplikasi`.`group_pengguna_akses_module` gpam_existing ON gpam_existing.ID = pa.GROUP_PENGGUNA_AKSES_MODULE
+JOIN `aplikasi`.`group_pengguna_akses_module` gpam_9035 ON gpam_9035.GROUP_PENGGUNA = gpam_existing.GROUP_PENGGUNA AND gpam_9035.MODUL = '9035'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `aplikasi`.`pengguna_akses` pa2 
+    WHERE pa2.PENGGUNA = pa.PENGGUNA AND pa2.GROUP_PENGGUNA_AKSES_MODULE = gpam_9035.ID
+);
