@@ -1,0 +1,7 @@
+<?php
+return [
+    'audit-rekam-medis' => [
+        'enabled' => true,
+        'title' => 'Audit Kelengkapan Rekam Medis Elektronik'
+    ]
+];
