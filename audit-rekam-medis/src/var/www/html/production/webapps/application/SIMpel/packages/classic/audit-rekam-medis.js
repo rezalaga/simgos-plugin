@@ -284,12 +284,19 @@ Ext.define("auditrekammedis.WorkspaceController", {
 });
 
 Ext.define("auditrekammedis.Workspace", {
-    extend: "com.Panel",
+    extend: "com.Form",
     alias: "widget.auditrekammedis-workspace",
     controller: "auditrekammedis-workspace",
     layout: "border",
     bodyPadding: 0,
     ui: "panel-blue",
+
+    load: function() {
+        var ctrl = this.getController();
+        if (ctrl && typeof ctrl.onSearch === "function") {
+            ctrl.onSearch();
+        }
+    },
 
     initComponent: function() {
         var me = this;
