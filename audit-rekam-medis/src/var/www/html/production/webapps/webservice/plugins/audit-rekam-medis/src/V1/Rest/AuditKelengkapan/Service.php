@@ -85,7 +85,7 @@ class Service extends DBService
 
         if (!empty($querySearch)) {
             $cleanQ = addslashes($querySearch);
-            $whereClauses[] = "(p.NORM LIKE '%$cleanQ%' OR pas.NAMA LIKE '%$cleanQ%' OR k.NOPEN LIKE '%$cleanQ%')";
+            $whereClauses[] = "(p.NORM LIKE '%$cleanQ%' OR pas.NAMA LIKE '%$cleanQ%' OR k.NOPEN LIKE '%$cleanQ%' OR peg.NAMA LIKE '%$cleanQ%')";
         }
 
         $whereSql = implode(' AND ', $whereClauses);
@@ -107,8 +107,8 @@ class Service extends DBService
                 k.KELUAR,
                 k.STATUS AS STATUS_KUNJUNGAN,
                 k.FINAL_HASIL,
-                k.DPJP,
-                IFNULL(peg.NAMA, '-') AS NAMA_DPJP,
+                COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) AS DPJP,
+                IFNULL(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(TRIM(peg.GELAR_DEPAN), ''), peg.NAMA, NULLIF(TRIM(peg.GELAR_BELAKANG), ''))), ''), '-') AS NAMA_DPJP,
                 TIMESTAMPDIFF(HOUR, k.MASUK, IFNULL(k.KELUAR, NOW())) AS DURASI_RAWAT_JAM,
                 -- Pengecekan Dokumen
                 (SELECT COUNT(*) FROM `medicalrecord`.`resume` res WHERE res.NOPEN = k.NOPEN AND res.STATUS = 1) AS C_RESUME,
@@ -117,7 +117,7 @@ class Service extends DBService
                 (SELECT COUNT(*) FROM `medicalrecord`.`anamnesis` anam WHERE anam.KUNJUNGAN = k.NOMOR AND anam.STATUS = 1) AS C_ANAMNESIS,
                 (SELECT COUNT(*) FROM `medicalrecord`.`tanda_vital` ttv WHERE ttv.KUNJUNGAN = k.NOMOR AND ttv.STATUS = 1) AS C_TTV,
                 (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1) AS C_CPPT,
-                (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1 AND (cppt.TENAGA_MEDIS = k.DPJP OR cppt.VERIFIKASI = 1)) AS C_CPPT_DPJP,
+                (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1 AND (cppt.TENAGA_MEDIS = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) OR cppt.VERIFIKASI = 1)) AS C_CPPT_DPJP,
                 (SELECT COUNT(*) FROM `medicalrecord`.`triage_ats` tri WHERE (tri.KUNJUNGAN = k.NOMOR OR tri.NOPEN = k.NOPEN) AND tri.STATUS = 1) AS C_TRIAGE,
                 (SELECT COUNT(*) FROM `medicalrecord`.`operasi` op WHERE op.KUNJUNGAN = k.NOMOR AND op.STATUS = 1) AS C_OPERASI,
                 (SELECT COUNT(*) FROM `medicalrecord`.`surgical_safety_checklist_signin` ssc WHERE ssc.KUNJUNGAN = k.NOMOR AND ssc.STATUS = 1) AS C_SSC,
@@ -128,8 +128,10 @@ class Service extends DBService
             FROM `pendaftaran`.`kunjungan` k
             JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS = 1
             JOIN `master`.`pasien` pas ON pas.NORM = p.NORM
+            LEFT JOIN `pendaftaran`.`tujuan_pasien` tp ON tp.NOPEN = k.NOPEN AND tp.STATUS != 0
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
-            LEFT JOIN `master`.`pegawai` peg ON peg.ID = k.DPJP
+            LEFT JOIN `master`.`dokter` dok ON dok.ID = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER)
+            LEFT JOIN `master`.`pegawai` peg ON peg.NIP = dok.NIP
             WHERE $whereSql
             ORDER BY k.MASUK DESC
         ";
@@ -405,8 +407,8 @@ class Service extends DBService
                 k.KELUAR,
                 k.STATUS AS STATUS_KUNJUNGAN,
                 k.FINAL_HASIL,
-                k.DPJP,
-                IFNULL(peg.NAMA, '-') AS NAMA_DPJP,
+                COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) AS DPJP,
+                IFNULL(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(TRIM(peg.GELAR_DEPAN), ''), peg.NAMA, NULLIF(TRIM(peg.GELAR_BELAKANG), ''))), ''), '-') AS NAMA_DPJP,
                 TIMESTAMPDIFF(HOUR, k.MASUK, IFNULL(k.KELUAR, NOW())) AS DURASI_RAWAT_JAM,
                 (SELECT COUNT(*) FROM `medicalrecord`.`resume` res WHERE res.NOPEN = k.NOPEN AND res.STATUS = 1) AS C_RESUME,
                 (SELECT COUNT(*) FROM `medicalrecord`.`diagnosa` diag WHERE diag.NOPEN = k.NOPEN AND diag.STATUS = 1) AS C_DIAGNOSA,
@@ -414,7 +416,7 @@ class Service extends DBService
                 (SELECT COUNT(*) FROM `medicalrecord`.`anamnesis` anam WHERE anam.KUNJUNGAN = k.NOMOR AND anam.STATUS = 1) AS C_ANAMNESIS,
                 (SELECT COUNT(*) FROM `medicalrecord`.`tanda_vital` ttv WHERE ttv.KUNJUNGAN = k.NOMOR AND ttv.STATUS = 1) AS C_TTV,
                 (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1) AS C_CPPT,
-                (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1 AND (cppt.TENAGA_MEDIS = k.DPJP OR cppt.VERIFIKASI = 1)) AS C_CPPT_DPJP,
+                (SELECT COUNT(*) FROM `medicalrecord`.`cppt` cppt WHERE cppt.KUNJUNGAN = k.NOMOR AND cppt.STATUS = 1 AND (cppt.TENAGA_MEDIS = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) OR cppt.VERIFIKASI = 1)) AS C_CPPT_DPJP,
                 (SELECT COUNT(*) FROM `medicalrecord`.`triage_ats` tri WHERE (tri.KUNJUNGAN = k.NOMOR OR tri.NOPEN = k.NOPEN) AND tri.STATUS = 1) AS C_TRIAGE,
                 (SELECT COUNT(*) FROM `medicalrecord`.`operasi` op WHERE op.KUNJUNGAN = k.NOMOR AND op.STATUS = 1) AS C_OPERASI,
                 (SELECT COUNT(*) FROM `medicalrecord`.`surgical_safety_checklist_signin` ssc WHERE ssc.KUNJUNGAN = k.NOMOR AND ssc.STATUS = 1) AS C_SSC,
@@ -425,8 +427,10 @@ class Service extends DBService
             FROM `pendaftaran`.`kunjungan` k
             JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS = 1
             JOIN `master`.`pasien` pas ON pas.NORM = p.NORM
+            LEFT JOIN `pendaftaran`.`tujuan_pasien` tp ON tp.NOPEN = k.NOPEN AND tp.STATUS != 0
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
-            LEFT JOIN `master`.`pegawai` peg ON peg.ID = k.DPJP
+            LEFT JOIN `master`.`dokter` dok ON dok.ID = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER)
+            LEFT JOIN `master`.`pegawai` peg ON peg.NIP = dok.NIP
             WHERE k.NOMOR = '$cleanKjgn'
             LIMIT 1
         ";
