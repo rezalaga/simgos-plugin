@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111816] - 2026-11-18
+### Removed
+- Menghilangkan banner header statis pada bagian atas modul Audit Rekam Medis untuk memberikan ruang vertikal yang lebih luas bagi tabel data pasien dan metrik KPI.
+
 ## [1.0.0-26111815] - 2026-11-18
 ### Added
 - Integrasi pembaruan status Verifikasi RM (inacbg.grouping) dan Kelengkapan Berkas (berkas_klaim.kelengkapan) langsung dari modul Audit Rekam Medis.

@@ -667,26 +667,11 @@ Ext.define("auditrekammedis.Workspace", {
                 border: false,
                 style: "background: #f4f7fb; border-bottom: 1px solid #e3e9f0;",
                 items: [
-                    // Header Banner (Satusehat Style)
-                    {
-                        xtype: "component",
-                        margin: "8 12 4 12",
-                        html: '<div style="background: #ffffff; border: 1px solid #e3e9f0; border-radius: 10px; padding: 12px 18px; box-shadow: 0 2px 8px rgba(31,52,73,0.04); display: flex; justify-content: space-between; align-items: center;">' +
-                              '  <div>' +
-                              '    <div style="color: #2f80ed; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;"><i class="x-fa fa-shield"></i> REKAM MEDIS ELEKTRONIK &bull; AUDIT MUTU KLINIS</div>' +
-                              '    <div style="color: #1d2939; font-size: 20px; font-weight: 800; line-height: 26px; margin-top: 2px;">Audit Kelengkapan & Kualitas Rekam Medis Pasien</div>' +
-                              '    <div style="color: #667085; font-size: 11px; margin-top: 2px;">Monitoring kepatuhan pengisian berkas klinis (Rawat Jalan, IGD, Ranap, Hemodialisa), deteksi anomali data, dan kelengkapan dokumen RME.</div>' +
-                              '  </div>' +
-                              '  <div style="text-align: right;">' +
-                              '    <span style="display: inline-block; padding: 4px 10px; background: #eaf2fd; color: #246fc4; border-radius: 6px; font-size: 11px; font-weight: 600;"><i class="x-fa fa-stethoscope"></i> RME Compliance Engine</span>' +
-                              '  </div>' +
-                              '</div>'
-                    },
                     // Panel Ringkasan KPI (Satusehat Theme Cards)
                     {
                         xtype: "container",
                         layout: { type: "hbox", align: "stretch" },
-                        padding: "4 12 8 12",
+                        padding: "8 12 8 12",
                         defaults: { flex: 1, margin: "0 6 0 0" },
                         items: [
                             {
