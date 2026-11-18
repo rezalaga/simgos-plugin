@@ -61,6 +61,7 @@ class Service extends DBService
         $jenisKunjungan = isset($params['jenis_kunjungan']) ? $params['jenis_kunjungan'] : 'ALL';
         $ruangan = isset($params['ruangan']) ? $params['ruangan'] : '';
         $statusFilter = isset($params['status_filter']) ? $params['status_filter'] : 'ALL';
+        $dpjp = isset($params['dpjp']) ? trim($params['dpjp']) : '';
         $querySearch = isset($params['query']) ? trim($params['query']) : '';
         
         $start = isset($params['start']) ? (int) $params['start'] : 0;
@@ -81,6 +82,16 @@ class Service extends DBService
         if (!empty($ruangan)) {
             $cleanRuangan = addslashes($ruangan);
             $whereClauses[] = "k.RUANGAN = '$cleanRuangan'";
+        }
+
+        if (!empty($dpjp) && $dpjp !== 'ALL' && $dpjp !== '0') {
+            if (is_numeric($dpjp)) {
+                $cleanDpjp = (int) $dpjp;
+                $whereClauses[] = "(COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) = $cleanDpjp)";
+            } else {
+                $cleanDpjp = addslashes($dpjp);
+                $whereClauses[] = "peg.NAMA LIKE '%$cleanDpjp%'";
+            }
         }
 
         if (!empty($querySearch)) {

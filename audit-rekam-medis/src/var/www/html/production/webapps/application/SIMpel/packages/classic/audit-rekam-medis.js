@@ -58,12 +58,14 @@ Ext.define("auditrekammedis.WorkspaceController", {
         var fAwal = view.down("[name=tgl_awal]"),
             fAkhir = view.down("[name=tgl_akhir]"),
             fJk = view.down("[name=jenis_kunjungan]"),
+            fDpjp = view.down("[name=dpjp]"),
             fStatus = view.down("[name=status_filter]"),
             fQ = view.down("[name=query_search]");
 
         var tglAwalVal = fAwal ? Ext.Date.format(fAwal.getValue(), "Y-m-d 00:00:00") : Ext.Date.format(new Date(), "Y-m-d 00:00:00"),
             tglAkhirVal = fAkhir ? Ext.Date.format(fAkhir.getValue(), "Y-m-d 23:59:59") : Ext.Date.format(new Date(), "Y-m-d 23:59:59"),
             jkVal = fJk ? fJk.getValue() : "ALL",
+            dpjpVal = fDpjp ? (fDpjp.getValue() || "ALL") : "ALL",
             statusVal = fStatus ? fStatus.getValue() : "ALL",
             qVal = fQ ? fQ.getValue() : "";
 
@@ -71,6 +73,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
             tanggal_awal: tglAwalVal,
             tanggal_akhir: tglAkhirVal,
             jenis_kunjungan: jkVal,
+            dpjp: dpjpVal,
             status_filter: statusVal,
             query: qVal
         });
@@ -96,12 +99,17 @@ Ext.define("auditrekammedis.WorkspaceController", {
         var fAwal = view.down("[name=tgl_awal]"),
             fAkhir = view.down("[name=tgl_akhir]"),
             fJk = view.down("[name=jenis_kunjungan]"),
+            fDpjp = view.down("[name=dpjp]"),
             fStatus = view.down("[name=status_filter]"),
             fQ = view.down("[name=query_search]");
 
         if (fAwal) fAwal.setValue(new Date());
         if (fAkhir) fAkhir.setValue(new Date());
         if (fJk) fJk.setValue("ALL");
+        if (fDpjp) {
+            fDpjp.clearValue();
+            if (fDpjp.getTriggers && fDpjp.getTriggers().clear) fDpjp.getTriggers().clear.hide();
+        }
         if (fStatus) fStatus.setValue("ALL");
         if (fQ) fQ.setValue("");
 
@@ -117,10 +125,54 @@ Ext.define("auditrekammedis.WorkspaceController", {
             cardLengkap = view.down("#card-jumlah-lengkap"),
             cardAnomali = view.down("#card-jumlah-anomali");
 
-        if (cardTotal) cardTotal.setHtml('<div class="kpi-box"><span class="kpi-num">' + (summary.total_pasien || 0) + '</span><span class="kpi-lbl">Total Pasien</span></div>');
-        if (cardPersen) cardPersen.setHtml('<div class="kpi-box"><span class="kpi-num x-color-blue">' + (summary.rata_persentase || 0) + '%</span><span class="kpi-lbl">Rata-rata Kelengkapan</span></div>');
-        if (cardLengkap) cardLengkap.setHtml('<div class="kpi-box"><span class="kpi-num x-color-green">' + (summary.jumlah_lengkap || 0) + '</span><span class="kpi-lbl">Berkas Lengkap (100%)</span></div>');
-        if (cardAnomali) cardAnomali.setHtml('<div class="kpi-box"><span class="kpi-num x-color-red">' + (summary.jumlah_anomali || 0) + '</span><span class="kpi-lbl">Terdeteksi Anomali</span></div>');
+        if (cardTotal) {
+            cardTotal.setHtml(
+                '<div class="satusehat-kpi-card-content satusehat-tone-info">' +
+                '  <div class="satusehat-kpi-icon"><i class="x-fa fa-users"></i></div>' +
+                '  <div class="satusehat-kpi-copy">' +
+                '    <div class="satusehat-kpi-label">TOTAL PASIEN</div>' +
+                '    <div class="satusehat-kpi-value">' + (summary.total_pasien || 0) + '</div>' +
+                '    <div class="satusehat-kpi-description">Kunjungan Terdaftar</div>' +
+                '  </div>' +
+                '</div>'
+            );
+        }
+        if (cardPersen) {
+            cardPersen.setHtml(
+                '<div class="satusehat-kpi-card-content satusehat-tone-info">' +
+                '  <div class="satusehat-kpi-icon"><i class="x-fa fa-pie-chart"></i></div>' +
+                '  <div class="satusehat-kpi-copy">' +
+                '    <div class="satusehat-kpi-label">RATA-RATA KELENGKAPAN</div>' +
+                '    <div class="satusehat-kpi-value">' + (summary.rata_persentase || 0) + '%</div>' +
+                '    <div class="satusehat-kpi-description">Kepatuhan Rekam Medis</div>' +
+                '  </div>' +
+                '</div>'
+            );
+        }
+        if (cardLengkap) {
+            cardLengkap.setHtml(
+                '<div class="satusehat-kpi-card-content satusehat-tone-success">' +
+                '  <div class="satusehat-kpi-icon"><i class="x-fa fa-check-circle"></i></div>' +
+                '  <div class="satusehat-kpi-copy">' +
+                '    <div class="satusehat-kpi-label">BERKAS LENGKAP (100%)</div>' +
+                '    <div class="satusehat-kpi-value">' + (summary.jumlah_lengkap || 0) + '</div>' +
+                '    <div class="satusehat-kpi-description">Dokumen Selesai</div>' +
+                '  </div>' +
+                '</div>'
+            );
+        }
+        if (cardAnomali) {
+            cardAnomali.setHtml(
+                '<div class="satusehat-kpi-card-content satusehat-tone-danger">' +
+                '  <div class="satusehat-kpi-icon"><i class="x-fa fa-exclamation-triangle"></i></div>' +
+                '  <div class="satusehat-kpi-copy">' +
+                '    <div class="satusehat-kpi-label">TERDETEKSI ANOMALI</div>' +
+                '    <div class="satusehat-kpi-value">' + (summary.jumlah_anomali || 0) + '</div>' +
+                '    <div class="satusehat-kpi-description">Perlu Perhatian Petugas RM</div>' +
+                '  </div>' +
+                '</div>'
+            );
+        }
     },
 
     openFastLaneEdit: function(record, docKode) {
@@ -131,7 +183,6 @@ Ext.define("auditrekammedis.WorkspaceController", {
             targetXtype = docInfo.xtype || "rekammedis-resume-workspace",
             namaDoc = docInfo.nama || "Dokumen Rekam Medis";
 
-        // Buat record kunjungan kompatibel dengan RME workspace SIMGoS
         var kjgnModel = Ext.create("data.model.Model", {
             NOMOR: record.get("KUNJUNGAN"),
             NOPEN: record.get("NOPEN"),
@@ -143,7 +194,6 @@ Ext.define("auditrekammedis.WorkspaceController", {
             DPJP: record.get("DPJP")
         });
 
-        // Inisialisasi pop-up window modal langsung ke form target
         var win = Ext.create("Ext.window.Window", {
             title: '<i class="x-fa fa-edit"></i> [Fast-Lane RME] ' + namaDoc + ' — ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
             width: "88%",
@@ -165,7 +215,6 @@ Ext.define("auditrekammedis.WorkspaceController", {
 
         win.show();
 
-        // Panggil metode .load() bawaan komponen RME SIMGoS
         Ext.defer(function() {
             var comp = win.down(targetXtype);
             if (comp) {
@@ -301,23 +350,44 @@ Ext.define("auditrekammedis.Workspace", {
     initComponent: function() {
         var me = this;
 
-        // Custom style injected for KPI Cards and Badges
+        // Custom style injected for KPI Cards and Badges (Satusehat Theme Revamp)
         if (!Ext.get("audit-rme-custom-style")) {
             Ext.util.CSS.createStyleSheet(
-                '.kpi-container { display: flex; gap: 10px; padding: 10px 15px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }' +
-                '.kpi-card { flex: 1; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }' +
-                '.kpi-box { text-align: center; }' +
-                '.kpi-num { display: block; font-size: 22px; font-weight: bold; color: #1e293b; }' +
-                '.kpi-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }' +
-                '.doc-chip { display: inline-block; padding: 2px 6px; margin: 1px; font-size: 10px; border-radius: 3px; font-weight: bold; cursor: pointer; text-decoration: none; }' +
-                '.doc-chip-ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }' +
-                '.doc-chip-empty { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }' +
-                '.doc-chip-warn { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }' +
-                '.badge-anomali { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; cursor: pointer; }' +
-                '.badge-anomali-alert { background: #fee2e2; color: #dc2626; border: 1px solid #f87171; animation: pulse 2s infinite; }' +
-                '.badge-anomali-valid { background: #dcfce7; color: #16a34a; border: 1px solid #4ade80; }' +
-                '.progress-bar-bg { width: 100%; background: #e2e8f0; border-radius: 4px; height: 16px; overflow: hidden; position: relative; }' +
-                '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; }',
+                '.satusehat-kpi-card { border: 1px solid #e3e9f0; border-radius: 10px; box-shadow: 0 3px 12px rgba(31, 52, 73, 0.06); background: #ffffff; overflow: hidden; height: 86px; }' +
+                '.satusehat-kpi-card-content { display: flex; align-items: center; padding: 12px 16px; height: 100%; box-sizing: border-box; }' +
+                '.satusehat-kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }' +
+                '.satusehat-kpi-copy { min-width: 0; flex: 1; }' +
+                '.satusehat-kpi-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; }' +
+                '.satusehat-kpi-value { font-size: 24px; font-weight: 800; line-height: 28px; margin-top: 2px; }' +
+                '.satusehat-kpi-description { font-size: 10px; color: #94a3b8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+
+                '.satusehat-tone-info .satusehat-kpi-icon { background: #eaf2fd; color: #246fc4; }' +
+                '.satusehat-tone-info .satusehat-kpi-value { color: #246fc4; }' +
+                '.satusehat-tone-info { border-top: 3px solid #2f80ed; }' +
+
+                '.satusehat-tone-success .satusehat-kpi-icon { background: #e8f7f0; color: #16875b; }' +
+                '.satusehat-tone-success .satusehat-kpi-value { color: #16875b; }' +
+                '.satusehat-tone-success { border-top: 3px solid #16a36a; }' +
+
+                '.satusehat-tone-danger .satusehat-kpi-icon { background: #fdecec; color: #c73b3b; }' +
+                '.satusehat-tone-danger .satusehat-kpi-value { color: #c73b3b; }' +
+                '.satusehat-tone-danger { border-top: 3px solid #d94a4a; }' +
+
+                '.doc-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; margin: 2px 2px; font-size: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }' +
+                '.doc-chip-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }' +
+                '.doc-chip-ok:hover { background: #d1fae5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+                '.doc-chip-empty { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }' +
+                '.doc-chip-empty:hover { background: #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+                '.doc-chip-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }' +
+                '.doc-chip-warn:hover { background: #fef3c7; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+
+                '.badge-anomali { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; }' +
+                '.badge-anomali-alert { background: #fdeaea; color: #bd3030; border: 1px solid #fca5a5; }' +
+                '.badge-anomali-valid { background: #e7f6ef; color: #147a53; border: 1px solid #86efac; }' +
+                '.badge-anomali-pending { background: #fff3df; color: #a86600; border: 1px solid #fde68a; }' +
+
+                '.progress-bar-bg { width: 100%; background: #e2e8f0; border-radius: 6px; height: 16px; overflow: hidden; position: relative; }' +
+                '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; transition: width 0.4s ease; }',
                 'audit-rme-custom-style'
             );
         }
@@ -328,47 +398,145 @@ Ext.define("auditrekammedis.Workspace", {
             {
                 region: "north",
                 border: false,
+                style: "background: #f4f7fb; border-bottom: 1px solid #e3e9f0;",
                 items: [
-                    // Panel Ringkasan KPI
+                    // Header Banner (Satusehat Style)
+                    {
+                        xtype: "component",
+                        margin: "8 12 4 12",
+                        html: '<div style="background: #ffffff; border: 1px solid #e3e9f0; border-radius: 10px; padding: 12px 18px; box-shadow: 0 2px 8px rgba(31,52,73,0.04); display: flex; justify-content: space-between; align-items: center;">' +
+                              '  <div>' +
+                              '    <div style="color: #2f80ed; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;"><i class="x-fa fa-shield"></i> REKAM MEDIS ELEKTRONIK &bull; AUDIT MUTU KLINIS</div>' +
+                              '    <div style="color: #1d2939; font-size: 20px; font-weight: 800; line-height: 26px; margin-top: 2px;">Audit Kelengkapan & Kualitas Rekam Medis Pasien</div>' +
+                              '    <div style="color: #667085; font-size: 11px; margin-top: 2px;">Monitoring kepatuhan pengisian berkas klinis (Rawat Jalan, IGD, Ranap, Hemodialisa), deteksi anomali data, dan fast-lane edit dokumen RME.</div>' +
+                              '  </div>' +
+                              '  <div style="text-align: right;">' +
+                              '    <span style="display: inline-block; padding: 4px 10px; background: #eaf2fd; color: #246fc4; border-radius: 6px; font-size: 11px; font-weight: 600;"><i class="x-fa fa-stethoscope"></i> RME Compliance Engine</span>' +
+                              '  </div>' +
+                              '</div>'
+                    },
+                    // Panel Ringkasan KPI (Satusehat Theme Cards)
                     {
                         xtype: "container",
                         layout: { type: "hbox", align: "stretch" },
-                        padding: "8 12",
-                        style: "background: #f1f5f9; border-bottom: 1px solid #cbd5e1;",
-                        defaults: { flex: 1, margin: "0 6 0 0", style: "background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px;" },
+                        padding: "4 12 8 12",
+                        defaults: { flex: 1, margin: "0 6 0 0" },
                         items: [
-                            { xtype: "component", itemId: "card-total-pasien", html: '<div class="kpi-box"><span class="kpi-num">0</span><span class="kpi-lbl">Total Pasien</span></div>' },
-                            { xtype: "component", itemId: "card-rata-persen", html: '<div class="kpi-box"><span class="kpi-num" style="color: #2563eb;">0%</span><span class="kpi-lbl">Rata-rata Kelengkapan</span></div>' },
-                            { xtype: "component", itemId: "card-jumlah-lengkap", html: '<div class="kpi-box"><span class="kpi-num" style="color: #16a34a;">0</span><span class="kpi-lbl">Lengkap (100%)</span></div>' },
-                            { xtype: "component", itemId: "card-jumlah-anomali", html: '<div class="kpi-box"><span class="kpi-num" style="color: #dc2626;">0</span><span class="kpi-lbl">Terdeteksi Anomali</span></div>', margin: "0 0 0 0" }
+                            {
+                                xtype: "component",
+                                itemId: "card-total-pasien",
+                                cls: "satusehat-kpi-card",
+                                html: '<div class="satusehat-kpi-card-content satusehat-tone-info">' +
+                                      '  <div class="satusehat-kpi-icon"><i class="x-fa fa-users"></i></div>' +
+                                      '  <div class="satusehat-kpi-copy">' +
+                                      '    <div class="satusehat-kpi-label">TOTAL PASIEN</div>' +
+                                      '    <div class="satusehat-kpi-value">0</div>' +
+                                      '    <div class="satusehat-kpi-description">Kunjungan Terdaftar</div>' +
+                                      '  </div>' +
+                                      '</div>'
+                            },
+                            {
+                                xtype: "component",
+                                itemId: "card-rata-persen",
+                                cls: "satusehat-kpi-card",
+                                html: '<div class="satusehat-kpi-card-content satusehat-tone-info">' +
+                                      '  <div class="satusehat-kpi-icon"><i class="x-fa fa-pie-chart"></i></div>' +
+                                      '  <div class="satusehat-kpi-copy">' +
+                                      '    <div class="satusehat-kpi-label">RATA-RATA KELENGKAPAN</div>' +
+                                      '    <div class="satusehat-kpi-value">0%</div>' +
+                                      '    <div class="satusehat-kpi-description">Kepatuhan Rekam Medis</div>' +
+                                      '  </div>' +
+                                      '</div>'
+                            },
+                            {
+                                xtype: "component",
+                                itemId: "card-jumlah-lengkap",
+                                cls: "satusehat-kpi-card",
+                                html: '<div class="satusehat-kpi-card-content satusehat-tone-success">' +
+                                      '  <div class="satusehat-kpi-icon"><i class="x-fa fa-check-circle"></i></div>' +
+                                      '  <div class="satusehat-kpi-copy">' +
+                                      '    <div class="satusehat-kpi-label">BERKAS LENGKAP (100%)</div>' +
+                                      '    <div class="satusehat-kpi-value">0</div>' +
+                                      '    <div class="satusehat-kpi-description">Dokumen Selesai</div>' +
+                                      '  </div>' +
+                                      '</div>'
+                            },
+                            {
+                                xtype: "component",
+                                itemId: "card-jumlah-anomali",
+                                cls: "satusehat-kpi-card",
+                                margin: "0 0 0 0",
+                                html: '<div class="satusehat-kpi-card-content satusehat-tone-danger">' +
+                                      '  <div class="satusehat-kpi-icon"><i class="x-fa fa-exclamation-triangle"></i></div>' +
+                                      '  <div class="satusehat-kpi-copy">' +
+                                      '    <div class="satusehat-kpi-label">TERDETEKSI ANOMALI</div>' +
+                                      '    <div class="satusehat-kpi-value">0</div>' +
+                                      '    <div class="satusehat-kpi-description">Perlu Perhatian Petugas RM</div>' +
+                                      '  </div>' +
+                                      '</div>'
+                            }
                         ]
                     },
-                    // Toolbar Filter
+                    // Toolbar Filter Modern
                     {
                         xtype: "toolbar",
-                        style: "background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 6px 12px;",
+                        style: "background: #ffffff; border-top: 1px solid #e3e9f0; padding: 8px 14px;",
                         items: [
-                            { xtype: "datefield", name: "tgl_awal", fieldLabel: "Dari", labelWidth: 32, width: 155, format: "Y-m-d", value: new Date() },
+                            { xtype: "datefield", name: "tgl_awal", fieldLabel: "Dari", labelWidth: 30, width: 155, format: "Y-m-d", value: new Date() },
                             { xtype: "datefield", name: "tgl_akhir", fieldLabel: "s/d", labelWidth: 24, width: 145, format: "Y-m-d", value: new Date() },
                             {
                                 xtype: "combobox",
                                 name: "jenis_kunjungan",
                                 emptyText: "[Jenis Pelayanan]",
-                                width: 140,
+                                width: 155,
                                 store: [
                                     ["ALL", "Semua Pelayanan"],
                                     ["1", "Rawat Jalan"],
                                     ["2", "Gawat Darurat (IGD)"],
-                                    ["3", "Rawat Inap"]
+                                    ["3", "Rawat Inap"],
+                                    ["7", "Hemodialisa (HD)"]
                                 ],
                                 value: "ALL",
-                                editable: false
+                                editable: false,
+                                listeners: {
+                                    select: function() { me.getController().onSearch(); }
+                                }
+                            },
+                            {
+                                xtype: "dokter-combo",
+                                name: "dpjp",
+                                emptyText: "[Pilih DPJP]",
+                                width: 200,
+                                params: { STATUS: 1 },
+                                firstLoad: true,
+                                triggers: {
+                                    clear: {
+                                        cls: "x-form-clear-trigger",
+                                        hidden: true,
+                                        handler: function() {
+                                            this.clearValue();
+                                            if (this.getTriggers && this.getTriggers().clear) this.getTriggers().clear.hide();
+                                            me.getController().onSearch();
+                                        }
+                                    }
+                                },
+                                listeners: {
+                                    change: function(cmp, val) {
+                                        if (cmp.getTriggers && cmp.getTriggers().clear) {
+                                            if (val) cmp.getTriggers().clear.show();
+                                            else cmp.getTriggers().clear.hide();
+                                        }
+                                    },
+                                    select: function() {
+                                        me.getController().onSearch();
+                                    }
+                                }
                             },
                             {
                                 xtype: "combobox",
                                 name: "status_filter",
                                 emptyText: "[Status Audit]",
-                                width: 140,
+                                width: 145,
                                 store: [
                                     ["ALL", "Semua Status"],
                                     ["BELUM_LENGKAP", "Belum Lengkap (<100%)"],
@@ -376,13 +544,16 @@ Ext.define("auditrekammedis.Workspace", {
                                     ["LENGKAP", "Lengkap (100%)"]
                                 ],
                                 value: "ALL",
-                                editable: false
+                                editable: false,
+                                listeners: {
+                                    select: function() { me.getController().onSearch(); }
+                                }
                             },
                             {
                                 xtype: "textfield",
                                 name: "query_search",
                                 emptyText: "Cari NORM / Nama / Nopen...",
-                                width: 200,
+                                width: 190,
                                 enableKeyEvents: true,
                                 listeners: {
                                     specialkey: function(field, e) {
@@ -427,7 +598,7 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "Pasien",
                         dataIndex: "NORM",
-                        width: 170,
+                        width: 175,
                         renderer: function(val, meta, rec) {
                             return '<b>' + (rec.get("NAMA_PASIEN") || "-") + '</b><br>' +
                                    '<span style="color: #64748b; font-size: 11px;">RM: ' + val + ' | ' + rec.get("JENIS_KELAMIN") + ' (' + rec.get("UMUR") + ' th)</span>';
@@ -436,7 +607,7 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "Kunjungan & Ruangan",
                         dataIndex: "NOPEN",
-                        width: 190,
+                        width: 195,
                         renderer: function(val, meta, rec) {
                             var tgl = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-";
                             return '<b>' + (rec.get("NAMA_RUANGAN") || "-") + '</b> (' + rec.get("LABEL_JENIS_KUNJUNGAN") + ')<br>' +
@@ -446,9 +617,9 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "DPJP",
                         dataIndex: "NAMA_DPJP",
-                        width: 160,
+                        width: 180,
                         renderer: function(val) {
-                            return '<span style="font-size: 11px;">' + (val || "-") + '</span>';
+                            return '<span style="font-size: 11px; font-weight: 500;">' + (val || "-") + '</span>';
                         }
                     },
                     {
@@ -457,7 +628,7 @@ Ext.define("auditrekammedis.Workspace", {
                         width: 130,
                         align: "center",
                         renderer: function(val) {
-                            var color = val >= 100 ? "#16a34a" : (val >= 75 ? "#eab308" : "#dc2626");
+                            var color = val >= 100 ? "#16a34a" : (val >= 75 ? "#eab308" : (val >= 40 ? "#f97316" : "#dc2626"));
                             return '<div class="progress-bar-bg">' +
                                    '<div class="progress-bar-fill" style="width: ' + val + '%; background: ' + color + ';">' + val + '%</div>' +
                                    '</div>';
@@ -476,7 +647,7 @@ Ext.define("auditrekammedis.Workspace", {
                             if (rec.get("PERSENTASE") >= 100) {
                                 return '<span class="badge-anomali badge-anomali-valid"><i class="x-fa fa-check"></i> Lengkap</span>';
                             }
-                            return '<span style="color: #64748b; font-size: 11px;">Belum Lengkap</span>';
+                            return '<span class="badge-anomali badge-anomali-pending"><i class="x-fa fa-clock-o"></i> Belum Lengkap</span>';
                         }
                     },
                     {
