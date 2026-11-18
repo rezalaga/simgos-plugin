@@ -205,7 +205,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
         });
 
         var win = Ext.create("Ext.window.Window", {
-            title: '<i class="x-fa fa-edit" style="color: #93c5fd; margin-right: 6px;"></i> [Fast-Lane RME] ' + namaDoc + ' — ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
+            title: '<i class="x-fa fa-edit" style="color: #93c5fd; margin-right: 6px;"></i> ' + namaDoc + ' — ' + record.get("NAMA_PASIEN") + ' (' + record.get("NORM") + ')',
             width: "92%",
             height: "90%",
             modal: true,
@@ -456,7 +456,7 @@ Ext.define("auditrekammedis.Workspace", {
                               '  <div>' +
                               '    <div style="color: #2f80ed; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;"><i class="x-fa fa-shield"></i> REKAM MEDIS ELEKTRONIK &bull; AUDIT MUTU KLINIS</div>' +
                               '    <div style="color: #1d2939; font-size: 20px; font-weight: 800; line-height: 26px; margin-top: 2px;">Audit Kelengkapan & Kualitas Rekam Medis Pasien</div>' +
-                              '    <div style="color: #667085; font-size: 11px; margin-top: 2px;">Monitoring kepatuhan pengisian berkas klinis (Rawat Jalan, IGD, Ranap, Hemodialisa), deteksi anomali data, dan fast-lane edit dokumen RME.</div>' +
+                              '    <div style="color: #667085; font-size: 11px; margin-top: 2px;">Monitoring kepatuhan pengisian berkas klinis (Rawat Jalan, IGD, Ranap, Hemodialisa), deteksi anomali data, dan kelengkapan dokumen RME.</div>' +
                               '  </div>' +
                               '  <div style="text-align: right;">' +
                               '    <span style="display: inline-block; padding: 4px 10px; background: #eaf2fd; color: #246fc4; border-radius: 6px; font-size: 11px; font-weight: 600;"><i class="x-fa fa-stethoscope"></i> RME Compliance Engine</span>' +
@@ -699,7 +699,7 @@ Ext.define("auditrekammedis.Workspace", {
                         }
                     },
                     {
-                        text: "Dokumen Rekam Medis (Klik untuk Fast-Lane Edit)",
+                        text: "Dokumen Rekam Medis",
                         dataIndex: "DOCS_STATUS",
                         flex: 1,
                         renderer: function(val, meta, rec) {
@@ -725,7 +725,7 @@ Ext.define("auditrekammedis.Workspace", {
                         items: [
                             {
                                 iconCls: "x-fa fa-edit x-color-blue",
-                                tooltip: "Fast-Lane Edit Resume Medis",
+                                tooltip: "Edit Resume Medis",
                                 handler: function(grid, rowIndex) {
                                     var rec = grid.getStore().getAt(rowIndex);
                                     me.getController().openFastLaneEdit(rec, "RESUME");
