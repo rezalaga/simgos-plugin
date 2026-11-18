@@ -72,7 +72,7 @@ class Service extends DBService
         if (strlen($tglAwal) == 10) $tglAwal .= ' 00:00:00';
         if (strlen($tglAkhir) == 10) $tglAkhir .= ' 23:59:59';
 
-        $whereClauses = ["k.STATUS = 1", "k.MASUK >= '$tglAwal'", "k.MASUK <= '$tglAkhir'"];
+        $whereClauses = ["k.STATUS != 0", "k.MASUK >= '$tglAwal'", "k.MASUK <= '$tglAkhir'"];
 
         if ($jenisKunjungan !== 'ALL' && $jenisKunjungan !== '') {
             $jkVal = (int) $jenisKunjungan;
@@ -83,15 +83,22 @@ class Service extends DBService
             $whereClauses[] = "r.JENIS_KUNJUNGAN IN (1, 2, 3, 7)";
         }
 
+        $targetRuangan = null;
         if (!empty($ruangan) && $ruangan !== 'ALL') {
-            $cleanRuangan = addslashes($ruangan);
-            $whereClauses[] = "k.RUANGAN = '$cleanRuangan'";
+            $targetRuangan = $ruangan;
         } elseif (!empty($params['poli']) && $params['poli'] !== 'ALL') {
-            $cleanPoli = addslashes($params['poli']);
-            $whereClauses[] = "k.RUANGAN = '$cleanPoli'";
+            $targetRuangan = $params['poli'];
         } elseif (!empty($params['ruangan_ranap']) && $params['ruangan_ranap'] !== 'ALL') {
-            $cleanRanap = addslashes($params['ruangan_ranap']);
-            $whereClauses[] = "k.RUANGAN = '$cleanRanap'";
+            $targetRuangan = $params['ruangan_ranap'];
+        }
+
+        if (!empty($targetRuangan)) {
+            $cleanRuangan = addslashes($targetRuangan);
+            if (is_numeric($cleanRuangan)) {
+                $whereClauses[] = "k.RUANGAN = '$cleanRuangan'";
+            } else {
+                $whereClauses[] = "(k.RUANGAN = '$cleanRuangan' OR r.DESKRIPSI LIKE '%$cleanRuangan%')";
+            }
         }
 
         if (!empty($dpjp) && $dpjp !== 'ALL' && $dpjp !== '0') {
@@ -147,7 +154,7 @@ class Service extends DBService
                 (SELECT COUNT(*) FROM `medicalrecord`.`edukasi_pasien_keluarga` edu WHERE edu.KUNJUNGAN = k.NOMOR AND edu.STATUS = 1) AS C_EDUKASI,
                 (SELECT COUNT(*) FROM `medicalrecord`.`rekonsiliasi_discharge` rk WHERE (rk.PENDAFTARAN = k.NOPEN OR rk.KUNJUNGAN = k.NOMOR) AND rk.STATUS = 1) AS C_REKONSILIASI
             FROM `pendaftaran`.`kunjungan` k
-            JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS = 1
+            JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS != 0
             JOIN `master`.`pasien` pas ON pas.NORM = p.NORM
             LEFT JOIN `pendaftaran`.`tujuan_pasien` tp ON tp.NOPEN = k.NOPEN AND tp.STATUS != 0
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
@@ -446,7 +453,7 @@ class Service extends DBService
                 (SELECT COUNT(*) FROM `medicalrecord`.`edukasi_pasien_keluarga` edu WHERE edu.KUNJUNGAN = k.NOMOR AND edu.STATUS = 1) AS C_EDUKASI,
                 (SELECT COUNT(*) FROM `medicalrecord`.`rekonsiliasi_discharge` rk WHERE (rk.PENDAFTARAN = k.NOPEN OR rk.KUNJUNGAN = k.NOMOR) AND rk.STATUS = 1) AS C_REKONSILIASI
             FROM `pendaftaran`.`kunjungan` k
-            JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS = 1
+            JOIN `pendaftaran`.`pendaftaran` p ON p.NOMOR = k.NOPEN AND p.STATUS != 0
             JOIN `master`.`pasien` pas ON pas.NORM = p.NORM
             LEFT JOIN `pendaftaran`.`tujuan_pasien` tp ON tp.NOPEN = k.NOPEN AND tp.STATUS != 0
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
