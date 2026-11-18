@@ -1,27 +1,9 @@
 (function() {
-    function injectAuditRmeTabStyles() {
-        if (typeof Ext !== "undefined" && Ext.util && Ext.util.CSS) {
-            var existing = Ext.get("audit-rme-tab-style");
-            if (existing) {
-                try { existing.destroy(); } catch (e) {}
-            }
-            Ext.util.CSS.createStyleSheet(
-                '.audit-rme-workspace-tab, .x-tab:has(.fa-clipboard-check) { position: relative !important; padding-right: 22px !important; }' +
-                '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { position: absolute !important; top: 2px !important; right: 3px !important; width: 14px !important; height: 14px !important; font-size: 0 !important; line-height: 0 !important; color: transparent !important; text-indent: -9999px !important; overflow: hidden !important; text-align: center !important; margin: 0 !important; border-radius: 3px !important; opacity: 0.6 !important; display: block !important; cursor: pointer !important; transition: all 0.2s ease !important; z-index: 10 !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:before { font-family: FontAwesome !important; content: "\\f00d" !important; font-size: 11px !important; line-height: 14px !important; color: #64748b !important; text-indent: 0 !important; float: none !important; display: block !important; width: 100% !important; height: 100% !important; text-align: center !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover:before { color: #dc2626 !important; }',
-                'audit-rme-tab-style'
-            );
+    if (typeof Ext !== "undefined" && Ext.util && Ext.util.CSS) {
+        var oldTabStyle = Ext.get("audit-rme-tab-style");
+        if (oldTabStyle) {
+            try { oldTabStyle.destroy(); } catch (e) {}
         }
-    }
-    if (typeof Ext !== "undefined") {
-        if (Ext.onReady) {
-            Ext.onReady(injectAuditRmeTabStyles);
-        }
-        injectAuditRmeTabStyles();
     }
 })();
 
@@ -424,40 +406,6 @@ Ext.define("auditrekammedis.Workspace", {
     bodyPadding: 0,
     ui: "panel-blue",
 
-    tabConfig: {
-        cls: "audit-rme-workspace-tab",
-        closeText: ""
-    },
-
-    listeners: {
-        afterrender: function(p) {
-            if (p.tab) {
-                p.tab.addCls("audit-rme-workspace-tab");
-                if (p.tab.closeEl && p.tab.closeEl.dom) {
-                    var el = p.tab.closeEl.dom;
-                    for (var i = el.childNodes.length - 1; i >= 0; i--) {
-                        if (el.childNodes[i].nodeType === 3) {
-                            el.removeChild(el.childNodes[i]);
-                        }
-                    }
-                }
-            }
-        },
-        activate: function(p) {
-            if (p.tab) {
-                p.tab.addCls("audit-rme-workspace-tab");
-                if (p.tab.closeEl && p.tab.closeEl.dom) {
-                    var el = p.tab.closeEl.dom;
-                    for (var i = el.childNodes.length - 1; i >= 0; i--) {
-                        if (el.childNodes[i].nodeType === 3) {
-                            el.removeChild(el.childNodes[i]);
-                        }
-                    }
-                }
-            }
-        }
-    },
-
     load: function() {
         var ctrl = this.getController();
         if (ctrl && typeof ctrl.onSearch === "function") {
@@ -469,68 +417,61 @@ Ext.define("auditrekammedis.Workspace", {
         var me = this;
 
         // Custom style injected for KPI Cards and Badges (Satusehat Theme Revamp)
-        if (!Ext.get("audit-rme-custom-style")) {
-            Ext.util.CSS.createStyleSheet(
-                '.satusehat-kpi-card { border: 1px solid #e3e9f0; border-radius: 10px; box-shadow: 0 3px 12px rgba(31, 52, 73, 0.06); background: #ffffff; overflow: hidden; height: 86px; }' +
-                '.satusehat-kpi-card-content { display: flex; align-items: center; padding: 12px 16px; height: 100%; box-sizing: border-box; }' +
-                '.satusehat-kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }' +
-                '.satusehat-kpi-copy { min-width: 0; flex: 1; }' +
-                '.satusehat-kpi-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; }' +
-                '.satusehat-kpi-value { font-size: 24px; font-weight: 800; line-height: 28px; margin-top: 2px; }' +
-                '.satusehat-kpi-description { font-size: 10px; color: #94a3b8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
-
-                '.satusehat-tone-info .satusehat-kpi-icon { background: #eaf2fd; color: #246fc4; }' +
-                '.satusehat-tone-info .satusehat-kpi-value { color: #246fc4; }' +
-                '.satusehat-tone-info { border-top: 3px solid #2f80ed; }' +
-
-                '.satusehat-tone-success .satusehat-kpi-icon { background: #e8f7f0; color: #16875b; }' +
-                '.satusehat-tone-success .satusehat-kpi-value { color: #16875b; }' +
-                '.satusehat-tone-success { border-top: 3px solid #16a36a; }' +
-
-                '.satusehat-tone-danger .satusehat-kpi-icon { background: #fdecec; color: #c73b3b; }' +
-                '.satusehat-tone-danger .satusehat-kpi-value { color: #c73b3b; }' +
-                '.satusehat-tone-danger { border-top: 3px solid #d94a4a; }' +
-
-                '.doc-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; margin: 2px 2px; font-size: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }' +
-                '.doc-chip-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }' +
-                '.doc-chip-ok:hover { background: #d1fae5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
-                '.doc-chip-empty { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }' +
-                '.doc-chip-empty:hover { background: #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
-                '.doc-chip-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }' +
-                '.doc-chip-warn:hover { background: #fef3c7; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
-
-                '.badge-anomali { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; }' +
-                '.badge-anomali-alert { background: #fdeaea; color: #bd3030; border: 1px solid #fca5a5; }' +
-                '.badge-anomali-valid { background: #e7f6ef; color: #147a53; border: 1px solid #86efac; }' +
-                '.badge-anomali-pending { background: #fff3df; color: #a86600; border: 1px solid #fde68a; }' +
-
-                '.progress-bar-bg { width: 100%; background: #e2e8f0; border-radius: 6px; height: 16px; overflow: hidden; position: relative; }' +
-                '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; transition: width 0.4s ease; }' +
-
-                // Fast-Lane Modal Styles
-                '.rme-fastlane-window { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important; border: 1px solid #1e3a8a !important; border-radius: 8px !important; overflow: hidden !important; }' +
-                '.rme-fastlane-window .x-window-header { background: #1e40af !important; min-height: 48px !important; padding: 10px 16px !important; border: none !important; }' +
-                '.rme-fastlane-window .x-window-header-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 26px !important; }' +
-                '.rme-fastlane-window .x-window-header-title .x-title-text { color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important; }' +
-                '.rme-fastlane-window .x-tool { width: 32px !important; height: 32px !important; margin-left: 8px !important; background: rgba(255, 255, 255, 0.22) !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
-                '.rme-fastlane-window .x-tool:hover { background: rgba(255, 255, 255, 0.4) !important; }' +
-                '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
-                '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
-                '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
-                '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }' +
-
-                // Tab Icon & Tab Balance Styling for Audit RME
-                '.audit-rme-workspace-tab, .x-tab:has(.fa-clipboard-check) { position: relative !important; padding-right: 22px !important; }' +
-                '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { position: absolute !important; top: 2px !important; right: 3px !important; width: 14px !important; height: 14px !important; font-size: 0 !important; line-height: 0 !important; color: transparent !important; text-indent: -9999px !important; overflow: hidden !important; text-align: center !important; margin: 0 !important; border-radius: 3px !important; opacity: 0.6 !important; display: block !important; cursor: pointer !important; transition: all 0.2s ease !important; z-index: 10 !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:before { font-family: FontAwesome !important; content: "\\f00d" !important; font-size: 11px !important; line-height: 14px !important; color: #64748b !important; text-indent: 0 !important; float: none !important; display: block !important; width: 100% !important; height: 100% !important; text-align: center !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; }' +
-                '.audit-rme-workspace-tab .x-tab-close-btn:hover:before, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover:before { color: #dc2626 !important; }' +
-                '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
-                'audit-rme-custom-style'
-            );
+        var existingCustomStyle = Ext.get("audit-rme-custom-style");
+        if (existingCustomStyle) {
+            try { existingCustomStyle.destroy(); } catch (e) {}
         }
+        Ext.util.CSS.createStyleSheet(
+            '.satusehat-kpi-card { border: 1px solid #e3e9f0; border-radius: 10px; box-shadow: 0 3px 12px rgba(31, 52, 73, 0.06); background: #ffffff; overflow: hidden; height: 86px; }' +
+            '.satusehat-kpi-card-content { display: flex; align-items: center; padding: 12px 16px; height: 100%; box-sizing: border-box; }' +
+            '.satusehat-kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 14px; flex-shrink: 0; }' +
+            '.satusehat-kpi-copy { min-width: 0; flex: 1; }' +
+            '.satusehat-kpi-label { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; }' +
+            '.satusehat-kpi-value { font-size: 24px; font-weight: 800; line-height: 28px; margin-top: 2px; }' +
+            '.satusehat-kpi-description { font-size: 10px; color: #94a3b8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+
+            '.satusehat-tone-info .satusehat-kpi-icon { background: #eaf2fd; color: #246fc4; }' +
+            '.satusehat-tone-info .satusehat-kpi-value { color: #246fc4; }' +
+            '.satusehat-tone-info { border-top: 3px solid #2f80ed; }' +
+
+            '.satusehat-tone-success .satusehat-kpi-icon { background: #e8f7f0; color: #16875b; }' +
+            '.satusehat-tone-success .satusehat-kpi-value { color: #16875b; }' +
+            '.satusehat-tone-success { border-top: 3px solid #16a36a; }' +
+
+            '.satusehat-tone-danger .satusehat-kpi-icon { background: #fdecec; color: #c73b3b; }' +
+            '.satusehat-tone-danger .satusehat-kpi-value { color: #c73b3b; }' +
+            '.satusehat-tone-danger { border-top: 3px solid #d94a4a; }' +
+
+            '.doc-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; margin: 2px 2px; font-size: 10px; border-radius: 4px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }' +
+            '.doc-chip-ok { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }' +
+            '.doc-chip-ok:hover { background: #d1fae5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+            '.doc-chip-empty { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }' +
+            '.doc-chip-empty:hover { background: #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+            '.doc-chip-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }' +
+            '.doc-chip-warn:hover { background: #fef3c7; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }' +
+
+            '.badge-anomali { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; cursor: pointer; }' +
+            '.badge-anomali-alert { background: #fdeaea; color: #bd3030; border: 1px solid #fca5a5; }' +
+            '.badge-anomali-valid { background: #e7f6ef; color: #147a53; border: 1px solid #86efac; }' +
+            '.badge-anomali-pending { background: #fff3df; color: #a86600; border: 1px solid #fde68a; }' +
+
+            '.progress-bar-bg { width: 100%; background: #e2e8f0; border-radius: 6px; height: 16px; overflow: hidden; position: relative; }' +
+            '.progress-bar-fill { height: 100%; text-align: center; color: #fff; font-size: 10px; font-weight: bold; line-height: 16px; transition: width 0.4s ease; }' +
+
+            // Fast-Lane Modal Styles
+            '.rme-fastlane-window { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important; border: 1px solid #1e3a8a !important; border-radius: 8px !important; overflow: hidden !important; }' +
+            '.rme-fastlane-window .x-window-header { background: #1e40af !important; min-height: 48px !important; padding: 10px 16px !important; border: none !important; }' +
+            '.rme-fastlane-window .x-window-header-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 26px !important; }' +
+            '.rme-fastlane-window .x-window-header-title .x-title-text { color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important; }' +
+            '.rme-fastlane-window .x-tool { width: 32px !important; height: 32px !important; margin-left: 8px !important; background: rgba(255, 255, 255, 0.22) !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
+            '.rme-fastlane-window .x-tool:hover { background: rgba(255, 255, 255, 0.4) !important; }' +
+            '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
+            '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
+            '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
+            '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }' +
+            '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
+            'audit-rme-custom-style'
+        );
 
         var store = Ext.create("auditrekammedis.audit.Store");
 
@@ -845,7 +786,17 @@ Ext.define("auditrekammedis.Workspace", {
                         width: 195,
                         renderer: function(val, meta, rec) {
                             var tgl = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-";
-                            return '<b>' + (rec.get("NAMA_RUANGAN") || "-") + '</b> (' + rec.get("LABEL_JENIS_KUNJUNGAN") + ')<br>' +
+                            var nmRuangan = rec.get("NAMA_RUANGAN") || "-";
+                            var labelJk = rec.get("LABEL_JENIS_KUNJUNGAN") || "";
+                            var isHd = rec.get("JENIS_KUNJUNGAN") == 7 || 
+                                       (nmRuangan && nmRuangan.toLowerCase().indexOf("hemodial") !== -1) || 
+                                       labelJk.toLowerCase() === "hemodialisa";
+
+                            var titleText = '<b>' + nmRuangan + '</b>';
+                            if (!isHd && labelJk) {
+                                titleText += ' (' + labelJk + ')';
+                            }
+                            return titleText + '<br>' +
                                    '<span style="color: #64748b; font-size: 11px;">Reg: ' + val + ' | ' + tgl + '</span>';
                         }
                     },

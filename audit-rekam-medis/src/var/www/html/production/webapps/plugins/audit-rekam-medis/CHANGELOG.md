@@ -1,5 +1,10 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111811] - 2026-11-18
+### Changed & Fixed
+- Mengembalikan ukuran tab header Audit RME ke ukuran standar bawaan ExtJS/SIMpel (menghapus CSS paksaan tab yang menyebabkan tab melebar hingga 100%).
+- Menghilangkan keterangan teks jenis kunjungan `(Hemodialisa)` pada kolom grid Kunjungan & Ruangan untuk pasien Hemodialisis sehingga hanya menampilkan nama ruangan secara bersih.
+
 ## [1.0.0-26111810] - 2026-11-18
 ### Changed & Fixed
 - Penyesuaian jenis kunjungan Hemodialisa: label kunjungan diset secara khusus menjadi 'Hemodialisa' (bukan 'Penunjang' dan bukan 'Rawat Jalan') dengan tetap mempertahankan dropdown filter Hemodialisa (HD).
