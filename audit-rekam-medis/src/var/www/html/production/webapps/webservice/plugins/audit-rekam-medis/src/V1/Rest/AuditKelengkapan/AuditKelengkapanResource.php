@@ -9,6 +9,7 @@ class AuditKelengkapanResource extends Resource
     public function __construct() {
         parent::__construct();
         $this->service = new Service();
+        $this->disconnectAfterRequest = false;
     }
 
     public function create($data)

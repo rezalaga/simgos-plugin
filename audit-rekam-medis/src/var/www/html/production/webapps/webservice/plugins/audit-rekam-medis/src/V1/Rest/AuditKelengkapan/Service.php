@@ -439,4 +439,34 @@ class Service extends DBService
         $rules = $this->getAuditRules();
         return $this->evaluatePatientAudit($row, $rules);
     }
+
+    public function disconnect()
+    {
+        if ($this->table) {
+            parent::disconnect();
+        } else if ($this->adapter) {
+            try {
+                $driver = $this->adapter->getDriver();
+                $conn = $driver->getConnection();
+                if ($conn->isConnected()) {
+                    $conn->disconnect();
+                }
+            } catch (\Throwable $t) {}
+        }
+    }
+
+    public function reconnect()
+    {
+        if ($this->table) {
+            parent::reconnect();
+        } else if ($this->adapter) {
+            try {
+                $driver = $this->adapter->getDriver();
+                $conn = $driver->getConnection();
+                if (!$conn->isConnected()) {
+                    $conn->connect();
+                }
+            } catch (\Throwable $t) {}
+        }
+    }
 }
