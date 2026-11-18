@@ -14,7 +14,10 @@ class AuditKelengkapanResource extends Resource
 
     public function create($data)
     {
-        return new ApiProblem(405, 'Method POST not supported');
+        $d = (array) $data;
+        $id = isset($d['NOPEN']) ? $d['NOPEN'] : (isset($d['id']) ? $d['id'] : '');
+        $result = $this->service->updateStatus($id, $d);
+        return $result;
     }
 
     public function delete($id)
@@ -54,11 +57,13 @@ class AuditKelengkapanResource extends Resource
 
     public function patch($id, $data)
     {
-        return new ApiProblem(405, 'Method PATCH not supported');
+        $result = $this->service->updateStatus($id, (array) $data);
+        return $result;
     }
 
     public function update($id, $data)
     {
-        return new ApiProblem(405, 'Method PUT not supported');
+        $result = $this->service->updateStatus($id, (array) $data);
+        return $result;
     }
 }

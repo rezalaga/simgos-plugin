@@ -31,9 +31,12 @@ return [
             'collection_name' => 'audit_kelengkapan',
             'entity_http_methods' => [
                 0 => 'GET',
+                1 => 'PUT',
+                2 => 'PATCH',
             ],
             'collection_http_methods' => [
                 0 => 'GET',
+                1 => 'POST',
             ],
             'collection_query_whitelist' => [
                 'tanggal_awal',

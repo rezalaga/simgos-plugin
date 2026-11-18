@@ -39,6 +39,8 @@ Ext.define("auditrekammedis.audit.Model", {
         { name: "DOCS_STATUS" },
         { name: "ANOMALI_LIST" },
         { name: "JUMLAH_ANOMALI", type: "int" },
+        { name: "STATUS_VERIFIKASI_RM", type: "int", defaultValue: 0 },
+        { name: "STATUS_KELENGKAPAN_BERKAS", type: "int", defaultValue: 1 },
         { name: "STATUS_LABEL", type: "string" }
     ],
     idProperty: "KUNJUNGAN"
@@ -255,6 +257,73 @@ Ext.define("auditrekammedis.WorkspaceController", {
                 xtype: targetXtype,
                 reference: "targetRmeWorkspace"
             }],
+            bbar: [
+                {
+                    xtype: "component",
+                    html: '<span style="font-weight: 600; color: #1e293b; font-size: 11px;"><i class="x-fa fa-shield" style="color:#2563eb;"></i> Verifikasi & Kelengkapan:</span>'
+                },
+                "-",
+                {
+                    xtype: "combobox",
+                    fieldLabel: "Verifikasi RM",
+                    labelWidth: 80,
+                    width: 175,
+                    editable: false,
+                    valueField: "id",
+                    displayField: "text",
+                    store: [
+                        [0, "Belum"],
+                        [1, "Proses"],
+                        [2, "Selesai"]
+                    ],
+                    value: record.get("STATUS_VERIFIKASI_RM") || 0,
+                    reference: "bbarComboVerif"
+                },
+                {
+                    xtype: "combobox",
+                    fieldLabel: "Berkas Klaim",
+                    labelWidth: 75,
+                    width: 185,
+                    editable: false,
+                    valueField: "id",
+                    displayField: "text",
+                    store: [
+                        [1, "Belum lengkap"],
+                        [2, "Lengkap"]
+                    ],
+                    value: record.get("STATUS_KELENGKAPAN_BERKAS") || 1,
+                    reference: "bbarComboBerkas"
+                },
+                {
+                    text: "Simpan Status",
+                    iconCls: "x-fa fa-save",
+                    ui: "soft-blue",
+                    handler: function() {
+                        var vVal = win.down("[reference=bbarComboVerif]").getValue();
+                        var bVal = win.down("[reference=bbarComboBerkas]").getValue();
+                        me.saveVerifikasiStatus(record.get("NOPEN"), vVal, bVal, function() {
+                            record.set("STATUS_VERIFIKASI_RM", vVal);
+                            record.set("STATUS_KELENGKAPAN_BERKAS", bVal);
+                            record.commit();
+                        });
+                    }
+                },
+                "->",
+                {
+                    text: '<i class="x-fa fa-check-circle"></i> <b>Tandai Selesai & Lengkap</b>',
+                    ui: "soft-green",
+                    tooltip: "Tandai Verifikasi RM Selesai dan Berkas Lengkap sekaligus",
+                    handler: function() {
+                        win.down("[reference=bbarComboVerif]").setValue(2);
+                        win.down("[reference=bbarComboBerkas]").setValue(2);
+                        me.saveVerifikasiStatus(record.get("NOPEN"), 2, 2, function() {
+                            record.set("STATUS_VERIFIKASI_RM", 2);
+                            record.set("STATUS_KELENGKAPAN_BERKAS", 2);
+                            record.commit();
+                        });
+                    }
+                }
+            ],
             listeners: {
                 close: function() {
                     me.onSearch();
@@ -379,6 +448,139 @@ Ext.define("auditrekammedis.WorkspaceController", {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    },
+
+    saveVerifikasiStatus: function(nopen, verifVal, berkasVal, callback) {
+        var me = this,
+            view = me.getView(),
+            app = (view && view.app) ? view.app : (Ext.getApplication ? Ext.getApplication() : null),
+            petugas = (app && app.usrNm) ? (app.usrNm + "(" + (app.usrid || "") + ")") : "Petugas Rekam Medis";
+
+        view.setLoading("Menyimpan status verifikasi...");
+        Ext.Ajax.request({
+            url: webservice.location + "auditrekammedis/kelengkapan/" + nopen,
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            jsonData: {
+                NOPEN: nopen,
+                STATUS_VERIFIKASI_RM: verifVal,
+                STATUS_KELENGKAPAN_BERKAS: berkasVal,
+                PETUGAS: petugas
+            },
+            success: function(resp) {
+                view.setLoading(false);
+                var res = Ext.decode(resp.responseText, true) || {};
+                Ext.toast({
+                    html: '<i class="x-fa fa-check-circle"></i> Status Verifikasi RM dan Kelengkapan Berkas berhasil diperbarui',
+                    align: "t",
+                    ui: "soft-green",
+                    timeout: 2500
+                });
+                if (typeof callback === "function") callback(res);
+            },
+            failure: function(resp) {
+                view.setLoading(false);
+                var res = Ext.decode(resp.responseText, true) || {};
+                Ext.Msg.alert("Gagal", res.message || "Gagal memperbarui status verifikasi");
+            }
+        });
+    },
+
+    onOpenStatusDialog: function(record) {
+        var me = this,
+            view = me.getView(),
+            nopen = record.get("NOPEN"),
+            norm = record.get("NORM"),
+            nama = record.get("NAMA_PASIEN"),
+            kunjungan = record.get("KUNJUNGAN"),
+            vCur = record.get("STATUS_VERIFIKASI_RM") !== undefined ? record.get("STATUS_VERIFIKASI_RM") : 0,
+            bCur = record.get("STATUS_KELENGKAPAN_BERKAS") !== undefined ? record.get("STATUS_KELENGKAPAN_BERKAS") : 1,
+            persen = record.get("PERSENTASE") || 0;
+
+        var dlg = Ext.create("Ext.window.Window", {
+            title: '<i class="x-fa fa-check-square-o" style="color: #93c5fd; margin-right: 6px;"></i> Update Status Verifikasi & Berkas Klaim',
+            width: 490,
+            modal: true,
+            ui: "window-blue",
+            cls: "rme-fastlane-window",
+            bodyPadding: 16,
+            layout: "vbox",
+            defaults: { width: "100%", margin: "0 0 12 0" },
+            items: [
+                {
+                    xtype: "component",
+                    html: '<div style="background: #f1f5f9; border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; border: 1px solid #e2e8f0;">' +
+                          '  <div style="font-weight: bold; font-size: 14px; color: #0f172a;">' + nama + ' (' + norm + ')</div>' +
+                          '  <div style="font-size: 11px; color: #64748b; margin-top: 3px;">Reg: <b>' + nopen + '</b> | Kunjungan: ' + kunjungan + '</div>' +
+                          '  <div style="font-size: 11px; color: #475569; margin-top: 4px;">Kepatuhan RME: <b>' + persen + '%</b> (' + (persen >= 100 ? '<span style="color:#16a34a; font-weight:bold;">Lengkap</span>' : '<span style="color:#dc2626; font-weight:bold;">Belum Lengkap</span>') + ')</div>' +
+                          '</div>'
+                },
+                {
+                    xtype: "combobox",
+                    fieldLabel: "Status Verifikasi RM",
+                    labelWidth: 160,
+                    name: "dlg_verif",
+                    editable: false,
+                    valueField: "id",
+                    displayField: "text",
+                    store: [
+                        [0, "Belum"],
+                        [1, "Proses"],
+                        [2, "Selesai"]
+                    ],
+                    value: vCur
+                },
+                {
+                    xtype: "combobox",
+                    fieldLabel: "Status Kelengkapan Berkas",
+                    labelWidth: 160,
+                    name: "dlg_berkas",
+                    editable: false,
+                    valueField: "id",
+                    displayField: "text",
+                    store: [
+                        [1, "Belum lengkap"],
+                        [2, "Lengkap"]
+                    ],
+                    value: bCur
+                }
+            ],
+            buttons: [
+                {
+                    text: '<i class="x-fa fa-check-circle"></i> Tandai Selesai & Lengkap',
+                    ui: "soft-green",
+                    handler: function() {
+                        me.saveVerifikasiStatus(nopen, 2, 2, function() {
+                            record.set("STATUS_VERIFIKASI_RM", 2);
+                            record.set("STATUS_KELENGKAPAN_BERKAS", 2);
+                            record.commit();
+                            dlg.close();
+                        });
+                    }
+                },
+                "->",
+                {
+                    text: "Simpan",
+                    iconCls: "x-fa fa-save",
+                    ui: "soft-blue",
+                    handler: function() {
+                        var vVal = dlg.down("[name=dlg_verif]").getValue();
+                        var bVal = dlg.down("[name=dlg_berkas]").getValue();
+                        me.saveVerifikasiStatus(nopen, vVal, bVal, function() {
+                            record.set("STATUS_VERIFIKASI_RM", vVal);
+                            record.set("STATUS_KELENGKAPAN_BERKAS", bVal);
+                            record.commit();
+                            dlg.close();
+                        });
+                    }
+                },
+                {
+                    text: "Batal",
+                    handler: function() { dlg.close(); }
+                }
+            ]
+        });
+        dlg.show();
     }
 });
 
@@ -767,7 +969,7 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "Kunjungan & Ruangan",
                         dataIndex: "NOPEN",
-                        width: 195,
+                        width: 225,
                         renderer: function(val, meta, rec) {
                             var tgl = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-";
                             var nmRuangan = rec.get("NAMA_RUANGAN") || "-";
@@ -780,8 +982,34 @@ Ext.define("auditrekammedis.Workspace", {
                             if (!isHd && labelJk) {
                                 titleText += ' (' + labelJk + ')';
                             }
+
+                            var vStatus = rec.get("STATUS_VERIFIKASI_RM") !== undefined ? rec.get("STATUS_VERIFIKASI_RM") : 0;
+                            var bStatus = rec.get("STATUS_KELENGKAPAN_BERKAS") !== undefined ? rec.get("STATUS_KELENGKAPAN_BERKAS") : 1;
+
+                            var vColors = ["#d11313", "#cb7615", "#15cb69"];
+                            var vTexts = ["Belum", "Proses", "Selesai"];
+                            var bColors = { 1: "#d11313", 2: "#15cb69" };
+                            var bTexts = { 1: "Belum lengkap", 2: "Lengkap" };
+
+                            var vColor = vColors[vStatus] || "#d11313";
+                            var vText = vTexts[vStatus] || "Belum";
+                            var bColor = bColors[bStatus] || "#d11313";
+                            var bText = bTexts[bStatus] || "Belum lengkap";
+
+                            var recId = rec.getId();
+                            var clickAction = 'Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onOpenStatusDialog(Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].down(\'grid\').getStore().getById(\'' + recId + '\'))';
+
+                            var badgeVerif = '<span style="display:inline-block; border-radius:3px; overflow:hidden; border:1px solid ' + vColor + '; font-size:10px; margin-top:4px; margin-right:4px; vertical-align:middle; cursor:pointer;" onclick="' + clickAction + '" title="Klik untuk ubah status Verifikasi RM">' +
+                                             '<span style="background:' + vColor + '; color:#fff; padding:1px 4px; font-weight:600;">Verifikasi RM</span>' +
+                                             '<span style="background:#fff; color:' + vColor + '; padding:1px 4px; font-weight:bold;">' + vText + '</span></span>';
+
+                            var badgeBerkas = '<span style="display:inline-block; border-radius:3px; overflow:hidden; border:1px solid ' + bColor + '; font-size:10px; margin-top:4px; vertical-align:middle; cursor:pointer;" onclick="' + clickAction + '" title="Klik untuk ubah status Kelengkapan Berkas">' +
+                                              '<span style="background:' + bColor + '; color:#fff; padding:1px 4px; font-weight:600;">Kelengkapan Berkas</span>' +
+                                              '<span style="background:#fff; color:' + bColor + '; padding:1px 4px; font-weight:bold;">' + bText + '</span></span>';
+
                             return titleText + '<br>' +
-                                   '<span style="color: #64748b; font-size: 11px;">Reg: ' + val + ' | ' + tgl + '</span>';
+                                   '<span style="color: #64748b; font-size: 11px;">Reg: ' + val + ' | ' + tgl + '</span><br>' +
+                                   badgeVerif + badgeBerkas;
                         }
                     },
                     {
@@ -842,9 +1070,17 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         xtype: "actioncolumn",
                         text: "Aksi",
-                        width: 60,
+                        width: 85,
                         align: "center",
                         items: [
+                            {
+                                iconCls: "x-fa fa-check-square-o x-color-green",
+                                tooltip: "Update Status Verifikasi RM & Kelengkapan Berkas",
+                                handler: function(grid, rowIndex) {
+                                    var rec = grid.getStore().getAt(rowIndex);
+                                    me.getController().onOpenStatusDialog(rec);
+                                }
+                            },
                             {
                                 iconCls: "x-fa fa-edit x-color-blue",
                                 tooltip: "Edit Resume Medis",

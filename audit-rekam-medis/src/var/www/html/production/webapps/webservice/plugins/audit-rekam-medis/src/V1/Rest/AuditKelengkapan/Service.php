@@ -138,6 +138,8 @@ class Service extends DBService
                 COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) AS DPJP,
                 IFNULL(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(TRIM(peg.GELAR_DEPAN), ''), peg.NAMA, NULLIF(TRIM(peg.GELAR_BELAKANG), ''))), ''), '-') AS NAMA_DPJP,
                 TIMESTAMPDIFF(HOUR, k.MASUK, IFNULL(k.KELUAR, NOW())) AS DURASI_RAWAT_JAM,
+                IFNULL(bk.STATUS, 1) AS STATUS_KELENGKAPAN_BERKAS,
+                IFNULL(CAST(JSON_UNQUOTE(JSON_EXTRACT(grp.DATA, '$.verifikasiRM')) AS UNSIGNED), 0) AS STATUS_VERIFIKASI_RM,
                 -- Pengecekan Dokumen
                 (SELECT COUNT(*) FROM `medicalrecord`.`resume` res WHERE res.NOPEN = k.NOPEN AND res.STATUS = 1) AS C_RESUME,
                 (SELECT COUNT(*) FROM `medicalrecord`.`diagnosa` diag WHERE diag.NOPEN = k.NOPEN AND diag.STATUS = 1) AS C_DIAGNOSA,
@@ -160,6 +162,8 @@ class Service extends DBService
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
             LEFT JOIN `master`.`dokter` dok ON dok.ID = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER)
             LEFT JOIN `master`.`pegawai` peg ON peg.NIP = dok.NIP
+            LEFT JOIN `berkas_klaim`.`kelengkapan` bk ON bk.NOPEN = k.NOPEN
+            LEFT JOIN `inacbg`.`grouping` grp ON grp.NOPEN = k.NOPEN
             WHERE $whereSql
             ORDER BY k.MASUK DESC
         ";
@@ -409,6 +413,8 @@ class Service extends DBService
             'DOCS_STATUS' => $docsStatus,
             'ANOMALI_LIST' => $anomaliList,
             'JUMLAH_ANOMALI' => count($anomaliList),
+            'STATUS_VERIFIKASI_RM' => isset($row['STATUS_VERIFIKASI_RM']) ? (int) $row['STATUS_VERIFIKASI_RM'] : 0,
+            'STATUS_KELENGKAPAN_BERKAS' => isset($row['STATUS_KELENGKAPAN_BERKAS']) ? (int) $row['STATUS_KELENGKAPAN_BERKAS'] : 1,
             'STATUS_LABEL' => ($persentase >= 100 && count($anomaliList) == 0) ? 'LENGKAP' : (count($anomaliList) > 0 ? 'ANOMALI' : 'BELUM LENGKAP')
         ];
     }
@@ -438,6 +444,8 @@ class Service extends DBService
                 COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER) AS DPJP,
                 IFNULL(NULLIF(TRIM(CONCAT_WS(' ', NULLIF(TRIM(peg.GELAR_DEPAN), ''), peg.NAMA, NULLIF(TRIM(peg.GELAR_BELAKANG), ''))), ''), '-') AS NAMA_DPJP,
                 TIMESTAMPDIFF(HOUR, k.MASUK, IFNULL(k.KELUAR, NOW())) AS DURASI_RAWAT_JAM,
+                IFNULL(bk.STATUS, 1) AS STATUS_KELENGKAPAN_BERKAS,
+                IFNULL(CAST(JSON_UNQUOTE(JSON_EXTRACT(grp.DATA, '$.verifikasiRM')) AS UNSIGNED), 0) AS STATUS_VERIFIKASI_RM,
                 (SELECT COUNT(*) FROM `medicalrecord`.`resume` res WHERE res.NOPEN = k.NOPEN AND res.STATUS = 1) AS C_RESUME,
                 (SELECT COUNT(*) FROM `medicalrecord`.`diagnosa` diag WHERE diag.NOPEN = k.NOPEN AND diag.STATUS = 1) AS C_DIAGNOSA,
                 (SELECT COUNT(*) FROM `medicalrecord`.`diagnosa` diag WHERE diag.NOPEN = k.NOPEN AND diag.STATUS = 1 AND diag.KODE != '-' AND diag.KODE != '') AS C_DIAGNOSA_ICD,
@@ -459,6 +467,8 @@ class Service extends DBService
             LEFT JOIN `master`.`ruangan` r ON r.ID = k.RUANGAN
             LEFT JOIN `master`.`dokter` dok ON dok.ID = COALESCE(NULLIF(k.DPJP, 0), tp.DOKTER)
             LEFT JOIN `master`.`pegawai` peg ON peg.NIP = dok.NIP
+            LEFT JOIN `berkas_klaim`.`kelengkapan` bk ON bk.NOPEN = k.NOPEN
+            LEFT JOIN `inacbg`.`grouping` grp ON grp.NOPEN = k.NOPEN
             WHERE k.NOMOR = '$cleanKjgn'
             LIMIT 1
         ";
@@ -500,5 +510,91 @@ class Service extends DBService
                 }
             } catch (\Throwable $t) {}
         }
+    }
+
+    /**
+     * Memperbarui status Verifikasi RM (inacbg.grouping) dan Kelengkapan Berkas (berkas_klaim.kelengkapan)
+     */
+    public function updateStatus($id, $data)
+    {
+        $nopen = isset($data['NOPEN']) && !empty($data['NOPEN']) ? trim($data['NOPEN']) : trim($id);
+        if (strlen($nopen) > 10) {
+            // Jika ID berupa Nomor Kunjungan, cari NOPEN padanannya
+            $sqlK = "SELECT NOPEN FROM `pendaftaran`.`kunjungan` WHERE NOMOR = ? LIMIT 1";
+            $stmtK = $this->adapter->query($sqlK);
+            $resK = $stmtK->execute([$nopen]);
+            $rowK = $resK->current();
+            if ($rowK && !empty($rowK['NOPEN'])) {
+                $nopen = $rowK['NOPEN'];
+            }
+        }
+
+        if (empty($nopen)) {
+            return ["success" => false, "message" => "Nomor pendaftaran (NOPEN) tidak valid"];
+        }
+
+        $petugas = isset($data['PETUGAS']) && !empty($data['PETUGAS']) ? trim($data['PETUGAS']) : 'Petugas Rekam Medis';
+        $statusVerif = isset($data['STATUS_VERIFIKASI_RM']) ? (int) $data['STATUS_VERIFIKASI_RM'] : null;
+        $statusBerkas = isset($data['STATUS_KELENGKAPAN_BERKAS']) ? (int) $data['STATUS_KELENGKAPAN_BERKAS'] : null;
+
+        // 1. Update Kelengkapan Berkas (berkas_klaim.kelengkapan)
+        if ($statusBerkas !== null && in_array($statusBerkas, [1, 2])) {
+            $sqlBk = "INSERT INTO `berkas_klaim`.`kelengkapan` (`NOPEN`, `STATUS`) VALUES (?, ?)
+                      ON DUPLICATE KEY UPDATE `STATUS` = VALUES(`STATUS`)";
+            $stmtBk = $this->adapter->query($sqlBk);
+            $stmtBk->execute([$nopen, $statusBerkas]);
+        }
+
+        // 2. Update Verifikasi RM (inacbg.grouping)
+        if ($statusVerif !== null && in_array($statusVerif, [0, 1, 2])) {
+            $sqlGrp = "SELECT `DATA` FROM `inacbg`.`grouping` WHERE `NOPEN` = ?";
+            $stmtGrp = $this->adapter->query($sqlGrp);
+            $resGrp = $stmtGrp->execute([$nopen]);
+            $rowGrp = $resGrp->current();
+
+            $now = date('Y-m-d H:i:s');
+            if ($rowGrp) {
+                $jsonData = json_decode($rowGrp['DATA'], true);
+                if (!is_array($jsonData)) $jsonData = [];
+                $jsonData['verifikasiRM'] = $statusVerif;
+                if (!isset($jsonData['aktifitas_berkas']) || !is_array($jsonData['aktifitas_berkas'])) {
+                    $jsonData['aktifitas_berkas'] = [];
+                }
+                $jsonData['aktifitas_berkas'][] = [
+                    'tanggal' => $now,
+                    'jenis' => $statusVerif,
+                    'petugas' => $petugas
+                ];
+                $newJson = json_encode($jsonData);
+                $sqlUpd = "UPDATE `inacbg`.`grouping` SET `DATA` = ? WHERE `NOPEN` = ?";
+                $stmtUpd = $this->adapter->query($sqlUpd);
+                $stmtUpd->execute([$newJson, $nopen]);
+            } else {
+                $jsonData = [
+                    'verifikasiRM' => $statusVerif,
+                    'aktifitas_berkas' => [
+                        [
+                            'tanggal' => $now,
+                            'jenis' => $statusVerif,
+                            'petugas' => $petugas
+                        ]
+                    ]
+                ];
+                $newJson = json_encode($jsonData);
+                $sqlIns = "INSERT INTO `inacbg`.`grouping` (`NOPEN`, `DATA`) VALUES (?, ?)";
+                $stmtIns = $this->adapter->query($sqlIns);
+                $stmtIns->execute([$nopen, $newJson]);
+            }
+        }
+
+        return [
+            "success" => true,
+            "message" => "Status verifikasi RM dan kelengkapan berkas berhasil disimpan",
+            "data" => [
+                "NOPEN" => $nopen,
+                "STATUS_VERIFIKASI_RM" => $statusVerif,
+                "STATUS_KELENGKAPAN_BERKAS" => $statusBerkas
+            ]
+        ];
     }
 }

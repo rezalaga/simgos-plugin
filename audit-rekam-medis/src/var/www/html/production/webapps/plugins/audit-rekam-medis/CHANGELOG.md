@@ -1,5 +1,13 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111815] - 2026-11-18
+### Added
+- Integrasi pembaruan status Verifikasi RM (inacbg.grouping) dan Kelengkapan Berkas (berkas_klaim.kelengkapan) langsung dari modul Audit Rekam Medis.
+- Tampilan badge indikator Verifikasi RM dan Kelengkapan Berkas di kolom Kunjungan & Ruangan pada grid audit.
+- Dialog aksi cepat 'Update Status Verifikasi & Berkas Klaim' dari tombol baris grid maupun saat mengklik badge.
+- Bilah aksi verifikasi dan tombol cepat 'Tandai Selesai & Lengkap' pada bottom toolbar modal editor berkas RME.
+- Endpoint REST API PUT/POST pada webservice Audit Kelengkapan untuk sinkronisasi otomatis status verifikasi dan berkas ke tabel inacbg dan berkas_klaim.
+
 ## [1.0.0-26111814] - 2026-11-18
 ### Changed
 - Menghilangkan tombol ekstra 'Tutup' pada bilah header jendela modal Deteksi Anomali Rekam Medis, menyisakan tombol kontrol standar window (close) di header dan tombol navigasi di footer.
