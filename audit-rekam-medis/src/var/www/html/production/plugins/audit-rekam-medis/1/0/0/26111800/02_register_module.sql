@@ -11,6 +11,7 @@ INSERT INTO `aplikasi`.`modules` (
     `NAMA` = VALUES(`NAMA`), 
     `CLASS` = VALUES(`CLASS`), 
     `STATUS` = VALUES(`STATUS`), 
+    `ICON_CLS` = VALUES(`ICON_CLS`), 
     `PACKAGE_NAME` = VALUES(`PACKAGE_NAME`), 
     `MENU_HOME` = VALUES(`MENU_HOME`);
 

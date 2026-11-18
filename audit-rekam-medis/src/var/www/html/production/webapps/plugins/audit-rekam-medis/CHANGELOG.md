@@ -1,5 +1,14 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111807] - 2026-11-18
+### Changed & Fixed
+- Peningkatan tampilan tab header: pembesaran icon tab audit RME menjadi 21px, opacity penuh, warna biru tegas, dan tombol close tab proporsional.
+- Perubahan label dokumen 'Triase (ATS)' menjadi 'Triase' pada seluruh rules klinis, indikator chip, dan deteksi anomali IGD.
+- Penambahan filter dinamis Poliklinik (Rawat Jalan) dan Ruangan Rawat Inap (Ranap) yang adaptif terhadap pilihan Jenis Pelayanan.
+- Pembersihan teks 'Fast-Lane Edit' pada header kolom dan judul modal editor berkas RME.
+- Perbaikan payload referensi Kunjungan pada modal editor untuk mencegah error 414 Request-URI Too Large pada riwayat catatan medis.
+- Filter default eksklusi kunjungan penunjang (Farmasi, Lab, Radiologi) dari dashboard audit RME.
+
 ## [1.0.0-26111800] - 2026-11-18
 ### Added
 - Inisiasi awal plugin Audit Kelengkapan & Kualitas Rekam Medis Elektronik (RME).

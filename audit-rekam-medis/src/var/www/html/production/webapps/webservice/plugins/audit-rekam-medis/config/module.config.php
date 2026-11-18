@@ -40,6 +40,8 @@ return [
                 'tanggal_akhir',
                 'jenis_kunjungan',
                 'ruangan',
+                'poli',
+                'ruangan_ranap',
                 'dpjp',
                 'status_filter',
                 'query',

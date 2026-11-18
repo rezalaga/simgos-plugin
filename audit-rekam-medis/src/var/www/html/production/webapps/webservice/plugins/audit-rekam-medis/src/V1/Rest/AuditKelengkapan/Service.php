@@ -39,9 +39,9 @@ class Service extends DBService
             'RESUME' => ['ID' => 'RESUME', 'NAMA' => 'Resume Medis', 'BOBOT' => 20, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'rekammedis-resume-workspace'],
             'DIAGNOSA' => ['ID' => 'DIAGNOSA', 'NAMA' => 'Diagnosa ICD-10', 'BOBOT' => 15, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'diagnosa-workspace'],
             'ANAMNESIS' => ['ID' => 'ANAMNESIS', 'NAMA' => 'Anamnesis', 'BOBOT' => 10, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'rekammedis-anamnesis-workspace'],
-            'TTV' => ['ID' => 'TTV', 'NAMA' => 'Tanda Vital', 'BOBOT' => 10, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'rekammedis-anamnesis-workspace'],
+            'TTV' => ['ID' => 'TTV', 'NAMA' => 'Tanda Vital', 'BOBOT' => 10, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'rekammedis-pemerikasaan-umum-tandavital-workspace'],
             'CPPT' => ['ID' => 'CPPT', 'NAMA' => 'CPPT DPJP', 'BOBOT' => 15, 'JENIS_KUNJUNGAN' => '3', 'TARGET_XTYPE' => 'rekammedis-cppt-workspace'],
-            'TRIAGE' => ['ID' => 'TRIAGE', 'NAMA' => 'Triase ATS', 'BOBOT' => 15, 'JENIS_KUNJUNGAN' => '2', 'TARGET_XTYPE' => 'rekammedis-triage-workspace'],
+            'TRIAGE' => ['ID' => 'TRIAGE', 'NAMA' => 'Triase', 'BOBOT' => 15, 'JENIS_KUNJUNGAN' => '2', 'TARGET_XTYPE' => 'rekammedis-triage-workspace'],
             'OPERASI' => ['ID' => 'OPERASI', 'NAMA' => 'Laporan Operasi', 'BOBOT' => 15, 'JENIS_KUNJUNGAN' => 'ALL', 'TRIGGER_CONDITION' => 'HAS_SURGERY', 'TARGET_XTYPE' => 'laporan-operasi-workspace'],
             'SSC' => ['ID' => 'SSC', 'NAMA' => 'Surgical Safety Checklist', 'BOBOT' => 10, 'JENIS_KUNJUNGAN' => 'ALL', 'TRIGGER_CONDITION' => 'HAS_SURGERY', 'TARGET_XTYPE' => 'laporan-operasi-workspace'],
             'GENERAL_CONSENT' => ['ID' => 'GENERAL_CONSENT', 'NAMA' => 'General Consent', 'BOBOT' => 5, 'JENIS_KUNJUNGAN' => 'ALL', 'TARGET_XTYPE' => 'rekammedis-uploaddocument-workspace'],
@@ -83,9 +83,15 @@ class Service extends DBService
             $whereClauses[] = "r.JENIS_KUNJUNGAN IN (1, 2, 3, 7)";
         }
 
-        if (!empty($ruangan)) {
+        if (!empty($ruangan) && $ruangan !== 'ALL') {
             $cleanRuangan = addslashes($ruangan);
             $whereClauses[] = "k.RUANGAN = '$cleanRuangan'";
+        } elseif (!empty($params['poli']) && $params['poli'] !== 'ALL') {
+            $cleanPoli = addslashes($params['poli']);
+            $whereClauses[] = "k.RUANGAN = '$cleanPoli'";
+        } elseif (!empty($params['ruangan_ranap']) && $params['ruangan_ranap'] !== 'ALL') {
+            $cleanRanap = addslashes($params['ruangan_ranap']);
+            $whereClauses[] = "k.RUANGAN = '$cleanRanap'";
         }
 
         if (!empty($dpjp) && $dpjp !== 'ALL' && $dpjp !== '0') {
@@ -300,12 +306,12 @@ class Service extends DBService
             }
         }
 
-        // 6. TRIASE ATS (Khusus IGD)
+        // 6. TRIASE (Khusus IGD)
         if ($jk === 2) {
             $triageTerisi = (int) $row['C_TRIAGE'] > 0;
             $docsStatus['TRIAGE'] = [
                 'kode' => 'TRIAGE',
-                'nama' => 'Triase ATS',
+                'nama' => 'Triase',
                 'status' => $triageTerisi ? 1 : 0,
                 'xtype' => 'rekammedis-triage-workspace'
             ];
@@ -313,7 +319,7 @@ class Service extends DBService
             if ($triageTerisi) {
                 $totalBobotTerisi += 15;
             } else {
-                $anomaliList[] = 'Kunjungan Gawat Darurat (IGD) tanpa formulir Triase ATS.';
+                $anomaliList[] = 'Kunjungan Gawat Darurat (IGD) tanpa formulir Triase.';
             }
         }
 

@@ -1,3 +1,27 @@
+(function() {
+    function injectAuditRmeTabStyles() {
+        if (typeof Ext !== "undefined" && Ext.util && Ext.util.CSS) {
+            var existing = Ext.get("audit-rme-tab-style");
+            if (existing) {
+                try { existing.destroy(); } catch (e) {}
+            }
+            Ext.util.CSS.createStyleSheet(
+                '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
+                '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 22px !important; height: 22px !important; font-size: 14px !important; line-height: 22px !important; text-align: center !important; margin-left: 10px !important; border-radius: 4px !important; opacity: 0.7 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; color: #dc2626 !important; transform: scale(1.1) !important; }',
+                'audit-rme-tab-style'
+            );
+        }
+    }
+    if (typeof Ext !== "undefined") {
+        if (Ext.onReady) {
+            Ext.onReady(injectAuditRmeTabStyles);
+        }
+        injectAuditRmeTabStyles();
+    }
+})();
+
 Ext.define("auditrekammedis.audit.Model", {
     extend: "data.model.Model",
     serviceName: "auditrekammedis/kelengkapan",
@@ -58,6 +82,8 @@ Ext.define("auditrekammedis.WorkspaceController", {
         var fAwal = view.down("[name=tgl_awal]"),
             fAkhir = view.down("[name=tgl_akhir]"),
             fJk = view.down("[name=jenis_kunjungan]"),
+            fPoli = view.down("[name=poli]"),
+            fRanap = view.down("[name=ruangan_ranap]"),
             fDpjp = view.down("[name=dpjp]"),
             fStatus = view.down("[name=status_filter]"),
             fQ = view.down("[name=query_search]");
@@ -65,14 +91,21 @@ Ext.define("auditrekammedis.WorkspaceController", {
         var tglAwalVal = fAwal ? Ext.Date.format(fAwal.getValue(), "Y-m-d 00:00:00") : Ext.Date.format(new Date(), "Y-m-d 00:00:00"),
             tglAkhirVal = fAkhir ? Ext.Date.format(fAkhir.getValue(), "Y-m-d 23:59:59") : Ext.Date.format(new Date(), "Y-m-d 23:59:59"),
             jkVal = fJk ? fJk.getValue() : "ALL",
+            poliVal = (fPoli && fPoli.isVisible()) ? (fPoli.getValue() || "ALL") : "ALL",
+            ranapVal = (fRanap && fRanap.isVisible()) ? (fRanap.getValue() || "ALL") : "ALL",
             dpjpVal = fDpjp ? (fDpjp.getValue() || "ALL") : "ALL",
             statusVal = fStatus ? fStatus.getValue() : "ALL",
             qVal = fQ ? fQ.getValue() : "";
+
+        var ruanganVal = (poliVal && poliVal !== "ALL") ? poliVal : ((ranapVal && ranapVal !== "ALL") ? ranapVal : "ALL");
 
         store.getProxy().setExtraParams({
             tanggal_awal: tglAwalVal,
             tanggal_akhir: tglAkhirVal,
             jenis_kunjungan: jkVal,
+            ruangan: ruanganVal,
+            poli: poliVal,
+            ruangan_ranap: ranapVal,
             dpjp: dpjpVal,
             status_filter: statusVal,
             query: qVal
@@ -99,6 +132,8 @@ Ext.define("auditrekammedis.WorkspaceController", {
         var fAwal = view.down("[name=tgl_awal]"),
             fAkhir = view.down("[name=tgl_akhir]"),
             fJk = view.down("[name=jenis_kunjungan]"),
+            fPoli = view.down("[name=poli]"),
+            fRanap = view.down("[name=ruangan_ranap]"),
             fDpjp = view.down("[name=dpjp]"),
             fStatus = view.down("[name=status_filter]"),
             fQ = view.down("[name=query_search]");
@@ -106,6 +141,16 @@ Ext.define("auditrekammedis.WorkspaceController", {
         if (fAwal) fAwal.setValue(new Date());
         if (fAkhir) fAkhir.setValue(new Date());
         if (fJk) fJk.setValue("ALL");
+        if (fPoli) {
+            fPoli.clearValue();
+            if (fPoli.getTriggers && fPoli.getTriggers().clear) fPoli.getTriggers().clear.hide();
+            fPoli.show();
+        }
+        if (fRanap) {
+            fRanap.clearValue();
+            if (fRanap.getTriggers && fRanap.getTriggers().clear) fRanap.getTriggers().clear.hide();
+            fRanap.show();
+        }
         if (fDpjp) {
             fDpjp.clearValue();
             if (fDpjp.getTriggers && fDpjp.getTriggers().clear) fDpjp.getTriggers().clear.hide();
@@ -376,6 +421,23 @@ Ext.define("auditrekammedis.Workspace", {
     bodyPadding: 0,
     ui: "panel-blue",
 
+    tabConfig: {
+        cls: "audit-rme-workspace-tab"
+    },
+
+    listeners: {
+        afterrender: function(p) {
+            if (p.tab) {
+                p.tab.addCls("audit-rme-workspace-tab");
+            }
+        },
+        activate: function(p) {
+            if (p.tab) {
+                p.tab.addCls("audit-rme-workspace-tab");
+            }
+        }
+    },
+
     load: function() {
         var ctrl = this.getController();
         if (ctrl && typeof ctrl.onSearch === "function") {
@@ -435,7 +497,14 @@ Ext.define("auditrekammedis.Workspace", {
                 '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
                 '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
                 '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
-                '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }',
+                '.btn-fastlane-close { border-radius: 6px !important; font-weight: 600 !important; margin-right: 12px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important; }' +
+
+                // Tab Icon & Tab Balance Styling for Audit RME
+                '.x-tab .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.fa-clipboard-check, .x-tab-icon-el.x-fa.fa-clipboard-check, .x-tab-icon-el.fas.fa-clipboard-check, .audit-rme-workspace-tab .x-tab-icon-el { font-size: 21px !important; width: 24px !important; height: 24px !important; line-height: 24px !important; margin-right: 8px !important; opacity: 1 !important; color: #1e40af !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; vertical-align: middle !important; }' +
+                '.audit-rme-workspace-tab .x-tab-inner, .x-tab:has(.fa-clipboard-check) .x-tab-inner { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; vertical-align: middle !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn { width: 22px !important; height: 22px !important; font-size: 14px !important; line-height: 22px !important; text-align: center !important; margin-left: 10px !important; border-radius: 4px !important; opacity: 0.7 !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
+                '.audit-rme-workspace-tab .x-tab-close-btn:hover, .x-tab:has(.fa-clipboard-check) .x-tab-close-btn:hover { opacity: 1 !important; background-color: #fee2e2 !important; color: #dc2626 !important; transform: scale(1.1) !important; }' +
+                '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
                 'audit-rme-custom-style'
             );
         }
@@ -547,7 +616,102 @@ Ext.define("auditrekammedis.Workspace", {
                                 value: "ALL",
                                 editable: false,
                                 listeners: {
-                                    select: function() { me.getController().onSearch(); }
+                                    select: function(combo) {
+                                        var val = combo.getValue(),
+                                            fPoli = me.down("[name=poli]"),
+                                            fRanap = me.down("[name=ruangan_ranap]");
+
+                                        if (val === "1") {
+                                            if (fPoli) fPoli.show();
+                                            if (fRanap) {
+                                                fRanap.clearValue();
+                                                if (fRanap.getTriggers && fRanap.getTriggers().clear) fRanap.getTriggers().clear.hide();
+                                                fRanap.hide();
+                                            }
+                                        } else if (val === "3") {
+                                            if (fRanap) fRanap.show();
+                                            if (fPoli) {
+                                                fPoli.clearValue();
+                                                if (fPoli.getTriggers && fPoli.getTriggers().clear) fPoli.getTriggers().clear.hide();
+                                                fPoli.hide();
+                                            }
+                                        } else if (val === "2" || val === "7") {
+                                            if (fPoli) {
+                                                fPoli.clearValue();
+                                                if (fPoli.getTriggers && fPoli.getTriggers().clear) fPoli.getTriggers().clear.hide();
+                                                fPoli.hide();
+                                            }
+                                            if (fRanap) {
+                                                fRanap.clearValue();
+                                                if (fRanap.getTriggers && fRanap.getTriggers().clear) fRanap.getTriggers().clear.hide();
+                                                fRanap.hide();
+                                            }
+                                        } else {
+                                            if (fPoli) fPoli.show();
+                                            if (fRanap) fRanap.show();
+                                        }
+                                        me.getController().onSearch();
+                                    }
+                                }
+                            },
+                            {
+                                xtype: "ruangan-combo",
+                                name: "poli",
+                                emptyText: "[Pilih Poli]",
+                                width: 165,
+                                params: { JENIS: 5, JENIS_KUNJUNGAN: 1, STATUS: 1, limit: 100 },
+                                firstLoad: true,
+                                triggers: {
+                                    clear: {
+                                        cls: "x-form-clear-trigger",
+                                        hidden: true,
+                                        handler: function() {
+                                            this.clearValue();
+                                            if (this.getTriggers && this.getTriggers().clear) this.getTriggers().clear.hide();
+                                            me.getController().onSearch();
+                                        }
+                                    }
+                                },
+                                listeners: {
+                                    change: function(cmp, val) {
+                                        if (cmp.getTriggers && cmp.getTriggers().clear) {
+                                            if (val) cmp.getTriggers().clear.show();
+                                            else cmp.getTriggers().clear.hide();
+                                        }
+                                    },
+                                    select: function() {
+                                        me.getController().onSearch();
+                                    }
+                                }
+                            },
+                            {
+                                xtype: "ruangan-combo",
+                                name: "ruangan_ranap",
+                                emptyText: "[Pilih Ruangan Ranap]",
+                                width: 180,
+                                params: { JENIS: 5, JENIS_KUNJUNGAN: 3, STATUS: 1, limit: 100 },
+                                firstLoad: true,
+                                triggers: {
+                                    clear: {
+                                        cls: "x-form-clear-trigger",
+                                        hidden: true,
+                                        handler: function() {
+                                            this.clearValue();
+                                            if (this.getTriggers && this.getTriggers().clear) this.getTriggers().clear.hide();
+                                            me.getController().onSearch();
+                                        }
+                                    }
+                                },
+                                listeners: {
+                                    change: function(cmp, val) {
+                                        if (cmp.getTriggers && cmp.getTriggers().clear) {
+                                            if (val) cmp.getTriggers().clear.show();
+                                            else cmp.getTriggers().clear.hide();
+                                        }
+                                    },
+                                    select: function() {
+                                        me.getController().onSearch();
+                                    }
                                 }
                             },
                             {
