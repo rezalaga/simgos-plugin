@@ -1,5 +1,10 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111810] - 2026-11-18
+### Changed & Fixed
+- Penyesuaian jenis kunjungan Hemodialisa: label kunjungan diset secara khusus menjadi 'Hemodialisa' (bukan 'Penunjang' dan bukan 'Rawat Jalan') dengan tetap mempertahankan dropdown filter Hemodialisa (HD).
+- Penataan posisi tombol close tab (tanda silang `×`) pada sudut kanan atas header tab (`position: absolute; top: 2px; right: 3px;`) agar rapi, sejajar, dan tidak turun ke bawah judul/icon tab.
+
 ## [1.0.0-26111809] - 2026-11-18
 ### Fixed
 - Menghilangkan teks "Tutup tab" yang bocor/tampil pada tab header modul Audit Rekam Medis melalui sanitasi text node DOM, `closeText: ""`, dan isolasi styling font/pseudo-elemen ikon FontAwesome.

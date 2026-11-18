@@ -398,7 +398,7 @@ class Service extends DBService
             'RUANGAN' => $row['RUANGAN'],
             'NAMA_RUANGAN' => $row['NAMA_RUANGAN'],
             'JENIS_KUNJUNGAN' => $jk,
-            'LABEL_JENIS_KUNJUNGAN' => $jk == 1 ? 'Rawat Jalan' : ($jk == 2 ? 'IGD' : ($jk == 3 ? 'Rawat Inap' : 'Penunjang')),
+            'LABEL_JENIS_KUNJUNGAN' => ($jk == 7 || stripos($row['NAMA_RUANGAN'], 'hemodial') !== false) ? 'Hemodialisa' : ($jk == 1 ? 'Rawat Jalan' : ($jk == 2 ? 'IGD' : ($jk == 3 ? 'Rawat Inap' : 'Penunjang'))),
             'MASUK' => $row['MASUK'],
             'KELUAR' => $row['KELUAR'],
             'FINAL_HASIL' => (int) $row['FINAL_HASIL'],
