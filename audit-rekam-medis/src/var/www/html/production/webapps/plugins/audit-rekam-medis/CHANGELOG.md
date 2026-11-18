@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111814] - 2026-11-18
+### Changed
+- Menghilangkan tombol ekstra 'Tutup' pada bilah header jendela modal Deteksi Anomali Rekam Medis, menyisakan tombol kontrol standar window (close) di header dan tombol navigasi di footer.
+
 ## [1.0.0-26111813] - 2026-11-18
 ### Changed
 - Menghilangkan tombol ekstra 'Tutup Form' pada bilah header modal editor berkas RME, menyisakan tombol kontrol standar window (maximize & close).

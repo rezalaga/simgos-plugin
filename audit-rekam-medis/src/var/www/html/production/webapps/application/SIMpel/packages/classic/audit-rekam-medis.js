@@ -299,18 +299,6 @@ Ext.define("auditrekammedis.WorkspaceController", {
             layout: "border",
             cls: "rme-fastlane-window",
             ui: "window-blue",
-            header: {
-                titlePosition: 0,
-                items: [{
-                    xtype: "button",
-                    text: '<i class="x-fa fa-times"></i> Tutup',
-                    cls: "btn-fastlane-close",
-                    ui: "soft-red",
-                    handler: function() {
-                        win.close();
-                    }
-                }]
-            },
             items: [
                 {
                     region: "north",
