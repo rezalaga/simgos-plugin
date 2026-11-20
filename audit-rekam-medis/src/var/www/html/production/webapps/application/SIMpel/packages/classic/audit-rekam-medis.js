@@ -614,30 +614,7 @@ onSelectPatient: function(record) {
 
         me.selectedRecord = record;
 
-        var btnQuick = view.down("#btn-quick-complete"),
-            btnStatus = view.down("#btn-open-status"),
-            btnAnomali = view.down("#btn-show-anomali"),
-            headerInfo = view.down("#detail-header-info"),
-            detailContainer = view.down("#detail-scroll-container");
-
-        if (btnQuick) btnQuick.setDisabled(false);
-        if (btnStatus) btnStatus.setDisabled(false);
-        if (btnAnomali) {
-            var anomaliCount = record.get("JUMLAH_ANOMALI") || 0;
-            btnAnomali.setDisabled(anomaliCount === 0);
-            btnAnomali.setText('<i class="x-fa fa-exclamation-triangle"></i> Anomali (' + anomaliCount + ')');
-        }
-
-        if (headerInfo) {
-            var pName = Ext.String.htmlEncode(record.get("NAMA_PASIEN") || "-");
-            var normVal = record.get("NORM") || "-";
-            var nopenVal = record.get("NOPEN") || "-";
-            headerInfo.setHtml(
-                '<span style="font-weight: 700; color: #0f172a; font-size: 13px;">' + pName + '</span> ' +
-                '<span style="color: #64748b; font-size: 11px;">(RM: <b style="color: #1e40af;">' + normVal + '</b> | Reg: <b>' + nopenVal + '</b>)</span>'
-            );
-        }
-
+        var detailContainer = view.down("#detail-scroll-container");
         if (detailContainer) {
             detailContainer.update(me.buildDetailHtml(record));
         }
@@ -649,21 +626,7 @@ onSelectPatient: function(record) {
 
         me.selectedRecord = null;
 
-        var btnQuick = view.down("#btn-quick-complete"),
-            btnStatus = view.down("#btn-open-status"),
-            btnAnomali = view.down("#btn-show-anomali"),
-            headerInfo = view.down("#detail-header-info"),
-            detailContainer = view.down("#detail-scroll-container");
-
-        if (btnQuick) btnQuick.setDisabled(true);
-        if (btnStatus) btnStatus.setDisabled(true);
-        if (btnAnomali) {
-            btnAnomali.setDisabled(true);
-            btnAnomali.setText('<i class="x-fa fa-exclamation-triangle"></i> Anomali');
-        }
-        if (headerInfo) {
-            headerInfo.setHtml('<span style="color: #64748b; font-size: 12px; font-weight: 500;">Pilih pasien di sebelah kiri</span>');
-        }
+        var detailContainer = view.down("#detail-scroll-container");
         if (detailContainer && typeof view.getEmptyDetailHtml === "function") {
             detailContainer.update(view.getEmptyDetailHtml());
         }
@@ -1395,46 +1358,6 @@ Ext.define("auditrekammedis.Workspace", {
                 border: true,
                 layout: "fit",
                 bodyStyle: "background: #f8fafc;",
-                tbar: [
-                    {
-                        xtype: "component",
-                        itemId: "detail-header-info",
-                        html: '<span style="color: #64748b; font-size: 12px; font-weight: 500;">Pilih pasien di sebelah kiri</span>'
-                    },
-                    "->",
-                    {
-                        text: '<i class="x-fa fa-check-circle"></i> <b>Tandai Selesai & Lengkap</b>',
-                        itemId: "btn-quick-complete",
-                        ui: "soft-green",
-                        disabled: true,
-                        tooltip: "Tandai Verifikasi RM Selesai dan Berkas Lengkap sekaligus",
-                        handler: function() {
-                            me.getController().onQuickCompleteCurrent();
-                        }
-                    },
-                    {
-                        text: "Update Status",
-                        itemId: "btn-open-status",
-                        iconCls: "x-fa fa-check-square-o",
-                        ui: "soft-blue",
-                        disabled: true,
-                        tooltip: "Buka dialog penyesuaian Status Verifikasi & Berkas",
-                        handler: function() {
-                            me.getController().onOpenStatusDialogCurrent();
-                        }
-                    },
-                    {
-                        text: "Anomali",
-                        itemId: "btn-show-anomali",
-                        iconCls: "x-fa fa-exclamation-triangle",
-                        ui: "soft-red",
-                        disabled: true,
-                        tooltip: "Lihat rincian catatan anomali pasien",
-                        handler: function() {
-                            me.getController().onShowAnomaliModalCurrent();
-                        }
-                    }
-                ],
                 items: [
                     {
                         xtype: "container",

@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111818] - 2026-11-20
+### Removed
+- Menghilangkan bilah toolbar atas (tbar) pada panel detail yang memuat teks nama/RM pasien dan tombol duplikat (Tandai Selesai, Update Status, Anomali) untuk mengeliminasi dobel menu dan memperluas area kerja vertikal dokumen RME.
+
 ## [1.0.0-26111817] - 2026-11-20
 ### Added
 - Tata letak 2 jendela (Master-Detail Split View) dengan pembagian layar:
