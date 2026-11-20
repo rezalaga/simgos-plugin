@@ -1,5 +1,12 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111819] - 2026-11-20
+### Removed
+- Menghilangkan kolom Kepatuhan pada tabel Daftar Pasien Audit di jendela kiri untuk mencegah redundansi informasi dengan kartu detail kanan.
+### Changed
+- Mengalokasikan sisa ruang tabel kiri sepenuhnya ke kolom DPJP (flex: 1) sehingga nama lengkap dokter dan gelar spesialis tidak terpotong.
+- Menambahkan badge peringatan anomali ringkas di samping nama pasien apabila ditemukan catatan ketidaksesuaian rekam medis.
+
 ## [1.0.0-26111818] - 2026-11-20
 ### Removed
 - Menghilangkan bilah toolbar atas (tbar) pada panel detail yang memuat teks nama/RM pasien dan tombol duplikat (Tandai Selesai, Update Status, Anomali) untuk mengeliminasi dobel menu dan memperluas area kerja vertikal dokumen RME.

@@ -1249,8 +1249,8 @@ Ext.define("auditrekammedis.Workspace", {
                 itemId: "master-patient-grid",
                 cls: "audit-master-grid",
                 title: '<i class="x-fa fa-users" style="color: #2563eb; margin-right: 6px;"></i> Daftar Pasien Audit',
-                width: 530,
-                minWidth: 420,
+                width: 510,
+                minWidth: 400,
                 maxWidth: 750,
                 split: true,
                 collapsible: true,
@@ -1266,13 +1266,18 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "Pasien",
                         dataIndex: "NORM",
-                        width: 165,
+                        width: 170,
                         renderer: function(val, meta, rec) {
                             var nm = Ext.String.htmlEncode(rec.get("NAMA_PASIEN") || "-");
                             var jk = rec.get("JENIS_KELAMIN") || "-";
                             var umur = rec.get("UMUR") || 0;
+                            var anomali = rec.get("JUMLAH_ANOMALI") || 0;
+                            var anomaliBadge = "";
+                            if (anomali > 0) {
+                                anomaliBadge = ' <span class="badge-anomali badge-anomali-alert" style="padding: 1px 5px; font-size: 9px; vertical-align: middle;" title="' + anomali + ' Catatan Anomali Rekam Medis"><i class="x-fa fa-exclamation-triangle"></i> ' + anomali + '</span>';
+                            }
                             return '<div style="line-height: 1.35;">' +
-                                   '  <b style="color: #0f172a; font-size: 13px;">' + nm + '</b><br>' +
+                                   '  <b style="color: #0f172a; font-size: 13px;">' + nm + '</b>' + anomaliBadge + '<br>' +
                                    '  <span style="color: #64748b; font-size: 11px;">RM: <b style="color: #1e40af;">' + val + '</b> | ' + jk + ' (' + umur + ' th)</span>' +
                                    '</div>';
                         }
@@ -1280,7 +1285,7 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "Kunjungan & Ruang",
                         dataIndex: "NOPEN",
-                        width: 175,
+                        width: 185,
                         renderer: function(val, meta, rec) {
                             var tgl = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-";
                             var nmRuangan = Ext.String.htmlEncode(rec.get("NAMA_RUANGAN") || "-");
@@ -1308,27 +1313,10 @@ Ext.define("auditrekammedis.Workspace", {
                     {
                         text: "DPJP",
                         dataIndex: "NAMA_DPJP",
-                        width: 105,
+                        flex: 1,
+                        minWidth: 140,
                         renderer: function(val) {
                             return '<span style="font-size: 11px; color: #334155; font-weight: 500;">' + Ext.String.htmlEncode(val || "-") + '</span>';
-                        }
-                    },
-                    {
-                        text: "Kepatuhan",
-                        dataIndex: "PERSENTASE",
-                        flex: 1,
-                        minWidth: 80,
-                        align: "center",
-                        renderer: function(val, meta, rec) {
-                            var color = val >= 100 ? "#16a34a" : (val >= 75 ? "#eab308" : (val >= 40 ? "#f97316" : "#dc2626"));
-                            var anomali = rec.get("JUMLAH_ANOMALI") || 0;
-                            var anomaliBadge = "";
-                            if (anomali > 0) {
-                                anomaliBadge = '<div style="margin-top: 3px;"><span class="badge-anomali badge-anomali-alert" style="padding: 1px 6px; font-size: 9px;"><i class="x-fa fa-exclamation-triangle"></i> ' + anomali + '</span></div>';
-                            }
-                            return '<div class="progress-bar-bg" style="height: 14px; margin-top: 2px;">' +
-                                   '  <div class="progress-bar-fill" style="width: ' + val + '%; background: ' + color + '; line-height: 14px; font-size: 9px;">' + val + '%</div>' +
-                                   '</div>' + anomaliBadge;
                         }
                     }
                 ],
