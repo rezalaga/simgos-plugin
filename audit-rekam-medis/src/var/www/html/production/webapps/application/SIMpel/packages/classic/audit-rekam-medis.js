@@ -705,6 +705,9 @@ onSelectPatient: function(record) {
 
         var html = "";
 
+        var infoKeluar = keluar ? ' <span style="color:#94a3b8; margin: 0 4px;">|</span> <span class="audit-meta-lbl">Keluar:</span> <b>' + keluar + '</b>' : '';
+        var titleKeluar = keluar ? ' | Keluar: ' + keluar : '';
+
         // 1. Patient Summary Card
         html += '<div class="audit-detail-card audit-detail-patient-box">' +
                 '  <div class="audit-detail-avatar"><i class="x-fa fa-user"></i></div>' +
@@ -715,12 +718,12 @@ onSelectPatient: function(record) {
                 '      <span class="audit-pill-tag audit-pill-green">' + jenisLayanan + '</span>' +
                 '    </div>' +
                 '    <div class="audit-detail-meta-grid">' +
-                '      <div><i class="x-fa fa-id-card-o" style="color:#2563eb; width:16px;"></i> No. RM: <b>' + norm + '</b></div>' +
-                '      <div><i class="x-fa fa-hashtag" style="color:#2563eb; width:16px;"></i> No. Reg: <b>' + nopen + '</b></div>' +
-                '      <div><i class="x-fa fa-exchange" style="color:#2563eb; width:16px;"></i> Kunjungan: <b>' + kunjungan + '</b></div>' +
-                '      <div><i class="x-fa fa-hospital-o" style="color:#2563eb; width:16px;"></i> Ruangan: <b>' + ruangan + '</b></div>' +
-                '      <div><i class="x-fa fa-user-md" style="color:#2563eb; width:16px;"></i> DPJP: <b>' + dpjp + '</b></div>' +
-                '      <div><i class="x-fa fa-calendar-check-o" style="color:#2563eb; width:16px;"></i> Masuk: <b>' + masuk + '</b>' + (keluar ? ' | Keluar: <b>' + keluar + '</b>' : '') + '</div>' +
+                '      <div class="audit-meta-item" title="No. Rekam Medis: ' + norm + '"><i class="x-fa fa-id-card-o"></i><span class="audit-meta-lbl">No. RM:</span><b>' + norm + '</b></div>' +
+                '      <div class="audit-meta-item" title="No. Registrasi: ' + nopen + '"><i class="x-fa fa-hashtag"></i><span class="audit-meta-lbl">No. Reg:</span><b>' + nopen + '</b></div>' +
+                '      <div class="audit-meta-item" title="Ruangan: ' + ruangan + '"><i class="x-fa fa-hospital-o"></i><span class="audit-meta-lbl">Ruangan:</span><b>' + ruangan + '</b></div>' +
+                '      <div class="audit-meta-item" title="No. Kunjungan: ' + kunjungan + '"><i class="x-fa fa-exchange"></i><span class="audit-meta-lbl">Kunjungan:</span><b>' + kunjungan + '</b></div>' +
+                '      <div class="audit-meta-item" title="DPJP: ' + dpjp + '"><i class="x-fa fa-user-md"></i><span class="audit-meta-lbl">DPJP:</span><b>' + dpjp + '</b></div>' +
+                '      <div class="audit-meta-item" title="Masuk: ' + masuk + titleKeluar + '"><i class="x-fa fa-calendar-check-o"></i><span class="audit-meta-lbl">Masuk:</span><b>' + masuk + '</b>' + infoKeluar + '</div>' +
                 '    </div>' +
                 '  </div>' +
                 '  <div class="audit-detail-score">' +
@@ -900,13 +903,16 @@ Ext.define("auditrekammedis.Workspace", {
             '.audit-detail-patient-box { padding: 14px 18px; display: flex; align-items: flex-start; gap: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-radius: 8px; border: 1px solid #e2e8f0; }' +
             '.audit-detail-avatar { width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #3730a3; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }' +
             '.audit-detail-pinfo { flex: 1; min-width: 0; }' +
-            '.audit-detail-pname { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }' +
-            '.audit-pill-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }' +
+            '.audit-detail-pname { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }' +
+            '.audit-pill-tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 9999px; }' +
             '.audit-pill-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }' +
             '.audit-pill-green { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }' +
             '.audit-pill-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }' +
-            '.audit-detail-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 12px; color: #475569; margin-top: 8px; }' +
-            '.audit-detail-meta-grid b { color: #1e293b; }' +
+            '.audit-detail-meta-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 16px; font-size: 12px; color: #475569; margin-top: 8px; }' +
+            '.audit-meta-item { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }' +
+            '.audit-meta-item i { color: #2563eb; width: 16px; text-align: center; flex-shrink: 0; }' +
+            '.audit-meta-lbl { color: #64748b; font-weight: 500; flex-shrink: 0; }' +
+            '.audit-meta-item b { color: #0f172a; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }' +
             '.audit-detail-score { text-align: center; padding: 6px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 90px; }' +
             '.audit-score-num { font-size: 26px; font-weight: 800; line-height: 30px; }' +
             '.audit-score-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }' +

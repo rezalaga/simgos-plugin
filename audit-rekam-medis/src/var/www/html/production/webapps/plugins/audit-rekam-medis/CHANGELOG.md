@@ -1,5 +1,14 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111821] - 2026-11-20
+### Changed
+- Merapikan tata letak informasi profil pasien pada kartu ringkasan detail menjadi format Grid Simetris 2 Baris × 3 Kolom yang seimbang dan proporsional.
+- Menata metadata pasien dengan susunan terstruktur:
+  - Baris 1: No. RM, No. Registrasi, Ruangan.
+  - Baris 2: No. Kunjungan, DPJP, Tanggal Masuk/Keluar.
+- Memberikan ruang horizontal yang cukup lebar pada kolom Kunjungan dan DPJP sehingga nomor kunjungan 17 digit dan nama DPJP beserta gelar tidak terpotong atau wrap sembarangan.
+- Mempercantik badge identitas jenis kelamin, umur, dan jenis layanan dengan model rounded pill halus (`border-radius: 9999px`).
+
 ## [1.0.0-26111820] - 2026-11-20
 ### Fixed
 - Menghilangkan pemaksaan ukuran kotak 32px dan background transparan pada tombol kontrol window header (x-tool maximize dan close) di jendela modal Fast-Lane RME untuk mencegah tabrakan/tumpang tindih (overlap), serta mengembalikan jarak dan tampilan bersih standar SIMGoS.
