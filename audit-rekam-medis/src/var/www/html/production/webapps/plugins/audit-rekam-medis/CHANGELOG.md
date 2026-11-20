@@ -1,5 +1,9 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111820] - 2026-11-20
+### Fixed
+- Menghilangkan pemaksaan ukuran kotak 32px dan background transparan pada tombol kontrol window header (x-tool maximize dan close) di jendela modal Fast-Lane RME untuk mencegah tabrakan/tumpang tindih (overlap), serta mengembalikan jarak dan tampilan bersih standar SIMGoS.
+
 ## [1.0.0-26111819] - 2026-11-20
 ### Removed
 - Menghilangkan kolom Kepatuhan pada tabel Daftar Pasien Audit di jendela kiri untuk mencegah redundansi informasi dengan kartu detail kanan.

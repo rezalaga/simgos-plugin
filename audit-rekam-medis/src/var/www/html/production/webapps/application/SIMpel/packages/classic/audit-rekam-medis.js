@@ -886,11 +886,9 @@ Ext.define("auditrekammedis.Workspace", {
             '.rme-fastlane-window .x-window-header { background: #1e40af !important; min-height: 48px !important; padding: 10px 16px !important; border: none !important; }' +
             '.rme-fastlane-window .x-window-header-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 26px !important; }' +
             '.rme-fastlane-window .x-window-header-title .x-title-text { color: #ffffff !important; font-size: 15px !important; font-weight: 700 !important; }' +
-            '.rme-fastlane-window .x-tool { width: 32px !important; height: 32px !important; margin-left: 8px !important; background: rgba(255, 255, 255, 0.22) !important; border-radius: 6px !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: all 0.2s ease !important; cursor: pointer !important; }' +
-            '.rme-fastlane-window .x-tool:hover { background: rgba(255, 255, 255, 0.4) !important; }' +
-            '.rme-fastlane-window .x-tool-close { background: rgba(239, 68, 68, 0.85) !important; }' +
-            '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
-            '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
+            '.rme-fastlane-window .x-tool { margin: 0 4px !important; opacity: 0.9 !important; transition: opacity 0.2s ease !important; cursor: pointer !important; }' +
+            '.rme-fastlane-window .x-tool:hover { opacity: 1 !important; }' +
+            '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; }' +
             '.x-tab-icon-el.fa-clipboard-check { font-size: 20px !important; width: 22px !important; height: 22px !important; line-height: 22px !important; color: #1e40af !important; vertical-align: middle !important; margin-right: 6px !important; }' +
             '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }' +
             // Master Grid styling
