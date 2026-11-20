@@ -1,5 +1,16 @@
 # Changelog Plugin Audit Rekam Medis Elektronik (RME) SIMGoS2
 
+## [1.0.0-26111817] - 2026-11-20
+### Added
+- Tata letak 2 jendela (Master-Detail Split View) dengan pembagian layar:
+  - Panel Kiri (Master): Daftar pasien audit ringkas (Pasien, Kunjungan & Ruang, DPJP, Progress Bar Kepatuhan & Badge Anomali) dengan splitter yang dapat di-resize dan dilipat (collapsible).
+  - Panel Kanan (Detail): Penampil detail komprehensif pasien terpilih berisi:
+    1. Kartu Ringkasan Pasien (Identitas, RM, Reg, Kunjungan, Ruangan, DPJP, Tanggal, dan Skor Kepatuhan RME).
+    2. Bilah Interaktif Status & Aksi Verifikasi Cepat (Status Verifikasi RM, Kelengkapan Berkas, tombol "Tandai Selesai & Lengkap", dan "Ubah Status").
+    3. Kotak Peringatan Anomali Klinis (menampilkan rincian anomali dan panduan tindak lanjut jika terdeteksi anomali pada pasien).
+    4. Checklist Dokumen Rekam Medis Elektronik Vertikal: Rincian status per dokumen (Resume Medis, Diagnosa ICD-10, Anamnesis, TTV, CPPT, Triase, Operasi, SSC, General Consent, Edukasi) lengkap dengan tombol langsung "Buka Dokumen / Koreksi / Lengkapi Form" (Fast-Lane Editor).
+- Fitur auto-select baris pertama pada saat data selesai dimuat dan re-selection otomatis pasien aktif setelah jendela editor ditutup.
+
 ## [1.0.0-26111816] - 2026-11-18
 ### Removed
 - Menghilangkan banner header statis pada bagian atas modul Audit Rekam Medis untuk memberikan ruang vertikal yang lebih luas bagi tabel data pasien dan metrik KPI.

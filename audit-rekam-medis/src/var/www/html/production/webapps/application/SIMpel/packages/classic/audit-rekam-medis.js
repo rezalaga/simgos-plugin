@@ -58,6 +58,7 @@ Ext.define("auditrekammedis.audit.Store", {
 Ext.define("auditrekammedis.WorkspaceController", {
     extend: "Ext.app.ViewController",
     alias: "controller.auditrekammedis-workspace",
+    selectedRecord: null,
 
     init: function() {
         var me = this;
@@ -106,6 +107,8 @@ Ext.define("auditrekammedis.WorkspaceController", {
             query: qVal
         });
 
+        var prevSelKjgn = me.selectedRecord ? me.selectedRecord.get("KUNJUNGAN") : null;
+
         view.setLoading(true);
         store.loadPage(1, {
             callback: function(records, operation, success) {
@@ -114,6 +117,19 @@ Ext.define("auditrekammedis.WorkspaceController", {
                     var raw = operation.getResponse() ? Ext.JSON.decode(operation.getResponse().responseText) : null;
                     if (raw && raw.summary) {
                         me.updateSummaryKPI(raw.summary);
+                    }
+                    var masterGrid = view.down("#master-patient-grid") || view.down("grid");
+                    if (records && records.length > 0) {
+                        var recToSelect = null;
+                        if (prevSelKjgn) {
+                            recToSelect = store.getById(prevSelKjgn);
+                        }
+                        if (!recToSelect) recToSelect = records[0];
+                        if (masterGrid) {
+                            masterGrid.getSelectionModel().select(recToSelect);
+                        }
+                    } else {
+                        me.clearDetailPasien();
                     }
                 }
             }
@@ -153,6 +169,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
         if (fStatus) fStatus.setValue("ALL");
         if (fQ) fQ.setValue("");
 
+        me.selectedRecord = null;
         me.onSearch();
     },
 
@@ -305,6 +322,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
                             record.set("STATUS_VERIFIKASI_RM", vVal);
                             record.set("STATUS_KELENGKAPAN_BERKAS", bVal);
                             record.commit();
+                            me.onSelectPatient(record);
                         });
                     }
                 },
@@ -320,6 +338,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
                             record.set("STATUS_VERIFIKASI_RM", 2);
                             record.set("STATUS_KELENGKAPAN_BERKAS", 2);
                             record.commit();
+                            me.onSelectPatient(record);
                         });
                     }
                 }
@@ -554,6 +573,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
                             record.set("STATUS_VERIFIKASI_RM", 2);
                             record.set("STATUS_KELENGKAPAN_BERKAS", 2);
                             record.commit();
+                            me.onSelectPatient(record);
                             dlg.close();
                         });
                     }
@@ -570,6 +590,7 @@ Ext.define("auditrekammedis.WorkspaceController", {
                             record.set("STATUS_VERIFIKASI_RM", vVal);
                             record.set("STATUS_KELENGKAPAN_BERKAS", bVal);
                             record.commit();
+                            me.onSelectPatient(record);
                             dlg.close();
                         });
                     }
@@ -581,6 +602,251 @@ Ext.define("auditrekammedis.WorkspaceController", {
             ]
         });
         dlg.show();
+    },
+onSelectPatient: function(record) {
+        var me = this,
+            view = me.getView();
+
+        if (!record) {
+            me.clearDetailPasien();
+            return;
+        }
+
+        me.selectedRecord = record;
+
+        var btnQuick = view.down("#btn-quick-complete"),
+            btnStatus = view.down("#btn-open-status"),
+            btnAnomali = view.down("#btn-show-anomali"),
+            headerInfo = view.down("#detail-header-info"),
+            detailContainer = view.down("#detail-scroll-container");
+
+        if (btnQuick) btnQuick.setDisabled(false);
+        if (btnStatus) btnStatus.setDisabled(false);
+        if (btnAnomali) {
+            var anomaliCount = record.get("JUMLAH_ANOMALI") || 0;
+            btnAnomali.setDisabled(anomaliCount === 0);
+            btnAnomali.setText('<i class="x-fa fa-exclamation-triangle"></i> Anomali (' + anomaliCount + ')');
+        }
+
+        if (headerInfo) {
+            var pName = Ext.String.htmlEncode(record.get("NAMA_PASIEN") || "-");
+            var normVal = record.get("NORM") || "-";
+            var nopenVal = record.get("NOPEN") || "-";
+            headerInfo.setHtml(
+                '<span style="font-weight: 700; color: #0f172a; font-size: 13px;">' + pName + '</span> ' +
+                '<span style="color: #64748b; font-size: 11px;">(RM: <b style="color: #1e40af;">' + normVal + '</b> | Reg: <b>' + nopenVal + '</b>)</span>'
+            );
+        }
+
+        if (detailContainer) {
+            detailContainer.update(me.buildDetailHtml(record));
+        }
+    },
+
+    clearDetailPasien: function() {
+        var me = this,
+            view = me.getView();
+
+        me.selectedRecord = null;
+
+        var btnQuick = view.down("#btn-quick-complete"),
+            btnStatus = view.down("#btn-open-status"),
+            btnAnomali = view.down("#btn-show-anomali"),
+            headerInfo = view.down("#detail-header-info"),
+            detailContainer = view.down("#detail-scroll-container");
+
+        if (btnQuick) btnQuick.setDisabled(true);
+        if (btnStatus) btnStatus.setDisabled(true);
+        if (btnAnomali) {
+            btnAnomali.setDisabled(true);
+            btnAnomali.setText('<i class="x-fa fa-exclamation-triangle"></i> Anomali');
+        }
+        if (headerInfo) {
+            headerInfo.setHtml('<span style="color: #64748b; font-size: 12px; font-weight: 500;">Pilih pasien di sebelah kiri</span>');
+        }
+        if (detailContainer && typeof view.getEmptyDetailHtml === "function") {
+            detailContainer.update(view.getEmptyDetailHtml());
+        }
+    },
+
+    onQuickCompleteCurrent: function() {
+        var me = this;
+        if (!me.selectedRecord) return;
+        var nopen = me.selectedRecord.get("NOPEN");
+        me.saveVerifikasiStatus(nopen, 2, 2, function() {
+            me.selectedRecord.set("STATUS_VERIFIKASI_RM", 2);
+            me.selectedRecord.set("STATUS_KELENGKAPAN_BERKAS", 2);
+            me.selectedRecord.commit();
+            me.onSelectPatient(me.selectedRecord);
+        });
+    },
+
+    onOpenStatusDialogCurrent: function() {
+        var me = this;
+        if (!me.selectedRecord) return;
+        me.onOpenStatusDialog(me.selectedRecord);
+    },
+
+    onShowAnomaliModalCurrent: function() {
+        var me = this;
+        if (!me.selectedRecord) return;
+        me.onShowAnomaliModal(me.selectedRecord);
+    },
+
+    onFastLaneDocClick: function(docKode) {
+        var me = this;
+        if (!me.selectedRecord) return;
+        me.openFastLaneEdit(me.selectedRecord, docKode);
+    },
+
+    buildDetailHtml: function(rec) {
+        var me = this,
+            norm = rec.get("NORM") || "-",
+            nama = Ext.String.htmlEncode(rec.get("NAMA_PASIEN") || "-"),
+            jk = (rec.get("JENIS_KELAMIN") == 1 || rec.get("JENIS_KELAMIN") == "L") ? "Laki-laki" : "Perempuan",
+            umur = rec.get("UMUR") || 0,
+            nopen = rec.get("NOPEN") || "-",
+            kunjungan = rec.get("KUNJUNGAN") || "-",
+            ruangan = Ext.String.htmlEncode(rec.get("NAMA_RUANGAN") || "-"),
+            dpjp = Ext.String.htmlEncode(rec.get("NAMA_DPJP") || "-"),
+            jenisLayanan = Ext.String.htmlEncode(rec.get("LABEL_JENIS_KUNJUNGAN") || "-"),
+            masuk = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-",
+            keluar = rec.get("KELUAR") ? Ext.Date.format(rec.get("KELUAR"), "d/m/Y H:i") : null,
+            persen = rec.get("PERSENTASE") || 0,
+            statusVerif = rec.get("STATUS_VERIFIKASI_RM") !== undefined ? rec.get("STATUS_VERIFIKASI_RM") : 0,
+            statusBerkas = rec.get("STATUS_KELENGKAPAN_BERKAS") !== undefined ? rec.get("STATUS_KELENGKAPAN_BERKAS") : 1,
+            anomalis = rec.get("ANOMALI_LIST") || [],
+            docs = rec.get("DOCS_STATUS") || {};
+
+        var pColor = persen >= 100 ? "#16a34a" : (persen >= 75 ? "#eab308" : (persen >= 40 ? "#f97316" : "#dc2626"));
+        var pStatusText = (persen >= 100 && anomalis.length === 0) ? "Lengkap" : (anomalis.length > 0 ? "Anomali" : "Belum Lengkap");
+
+        var vText = statusVerif === 2 ? "Selesai" : (statusVerif === 1 ? "Proses" : "Belum");
+        var vCls = statusVerif === 2 ? "val-selesai" : (statusVerif === 1 ? "val-proses" : "val-belum");
+
+        var bText = statusBerkas === 2 ? "Lengkap" : "Belum Lengkap";
+        var bCls = statusBerkas === 2 ? "val-selesai" : "val-belum";
+
+        var docMeta = {
+            RESUME: { icon: "fa-file-text-o", desc: "Ringkasan perawatan pulang, diagnosa akhir, komorbiditas & terapi keluar" },
+            DIAGNOSA: { icon: "fa-stethoscope", desc: "Koding diagnosa primer/sekunder ICD-10 & tindakan medis ICD-9-CM" },
+            ANAMNESIS: { icon: "fa-user-md", desc: "Keluhan utama, riwayat penyakit, alergi, dan pengkajian awal klinis" },
+            TTV: { icon: "fa-heartbeat", desc: "Pemeriksaan tanda vital: Tekanan darah, nadi, suhu, nafas & SpO2" },
+            CPPT: { icon: "fa-pencil-square-o", desc: "Catatan Perkembangan Pasien Terintegrasi format SOAP DPJP" },
+            TRIAGE: { icon: "fa-ambulance", desc: "Skrining & penilaian kegawatdaruratan triase Instalasi Gawat Darurat" },
+            OPERASI: { icon: "fa-scissors", desc: "Laporan tindakan pembedahan intra-operatif, operator & anastesi" },
+            SSC: { icon: "fa-shield", desc: "Surgical Safety Checklist (Sign-in, Time-out, Sign-out kamar operasi)" },
+            GENERAL_CONSENT: { icon: "fa-check-square-o", desc: "Persetujuan umum perawatan pasien dan hak & kewajiban pasien" },
+            EDUKASI: { icon: "fa-comments-o", desc: "Formulir pemberian edukasi terintegrasi kepada pasien / keluarga" }
+        };
+
+        var html = "";
+
+        // 1. Patient Summary Card
+        html += '<div class="audit-detail-card audit-detail-patient-box">' +
+                '  <div class="audit-detail-avatar"><i class="x-fa fa-user"></i></div>' +
+                '  <div class="audit-detail-pinfo">' +
+                '    <div class="audit-detail-pname">' +
+                '      <span>' + nama + '</span>' +
+                '      <span class="audit-pill-tag audit-pill-blue">' + jk + ', ' + umur + ' th</span>' +
+                '      <span class="audit-pill-tag audit-pill-green">' + jenisLayanan + '</span>' +
+                '    </div>' +
+                '    <div class="audit-detail-meta-grid">' +
+                '      <div><i class="x-fa fa-id-card-o" style="color:#2563eb; width:16px;"></i> No. RM: <b>' + norm + '</b></div>' +
+                '      <div><i class="x-fa fa-hashtag" style="color:#2563eb; width:16px;"></i> No. Reg: <b>' + nopen + '</b></div>' +
+                '      <div><i class="x-fa fa-exchange" style="color:#2563eb; width:16px;"></i> Kunjungan: <b>' + kunjungan + '</b></div>' +
+                '      <div><i class="x-fa fa-hospital-o" style="color:#2563eb; width:16px;"></i> Ruangan: <b>' + ruangan + '</b></div>' +
+                '      <div><i class="x-fa fa-user-md" style="color:#2563eb; width:16px;"></i> DPJP: <b>' + dpjp + '</b></div>' +
+                '      <div><i class="x-fa fa-calendar-check-o" style="color:#2563eb; width:16px;"></i> Masuk: <b>' + masuk + '</b>' + (keluar ? ' | Keluar: <b>' + keluar + '</b>' : '') + '</div>' +
+                '    </div>' +
+                '  </div>' +
+                '  <div class="audit-detail-score">' +
+                '    <div class="audit-score-num" style="color: ' + pColor + ';">' + persen + '%</div>' +
+                '    <div class="audit-score-lbl" style="color: ' + pColor + ';">' + pStatusText + '</div>' +
+                '  </div>' +
+                '</div>';
+
+        // 2. Status & Fast-Lane Verification Strip
+        html += '<div class="audit-status-strip">' +
+                '  <div class="audit-status-indicators">' +
+                '    <div class="audit-status-item">' +
+                '      <i class="x-fa fa-shield" style="color: #2563eb;"></i> Status Verifikasi RM:' +
+                '      <span class="audit-status-val ' + vCls + '">' + vText + '</span>' +
+                '    </div>' +
+                '    <div class="audit-status-item">' +
+                '      <i class="x-fa fa-file-archive-o" style="color: #16a34a;"></i> Kelengkapan Berkas Klaim:' +
+                '      <span class="audit-status-val ' + bCls + '">' + bText + '</span>' +
+                '    </div>' +
+                '  </div>' +
+                '  <div class="audit-status-btns">' +
+                '    <button type="button" class="btn-act-quick" onclick="Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onQuickCompleteCurrent()" title="Tandai Selesai & Lengkap Sekaligus">' +
+                '      <i class="x-fa fa-check-circle"></i> Tandai Selesai & Lengkap' +
+                '    </button>' +
+                '    <button type="button" class="btn-act-update" onclick="Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onOpenStatusDialogCurrent()" title="Buka dialog pemilihan status">' +
+                '      <i class="x-fa fa-sliders"></i> Ubah Status' +
+                '    </button>' +
+                '  </div>' +
+                '</div>';
+
+        // 3. Anomaly Alert Box (if any)
+        if (anomalis.length > 0) {
+            html += '<div class="audit-anomali-alert">' +
+                    '  <div class="audit-anomali-alert-title">' +
+                    '    <i class="x-fa fa-exclamation-triangle"></i>' +
+                    '    <span>Ditemukan <b>' + anomalis.length + ' catatan anomali / ketidaksesuaian</b> pada rekam medis kunjungan ini:</span>' +
+                    '  </div>' +
+                    '  <ul class="audit-anomali-alert-list">';
+            Ext.each(anomalis, function(item) {
+                html += '<li>' + Ext.String.htmlEncode(item) + '</li>';
+            });
+            html += '  </ul>' +
+                    '</div>';
+        }
+
+        // 4. Checklist Documents List
+        var docKeys = Ext.Object.getKeys(docs);
+        var totalDocs = docKeys.length;
+        var countLengkap = 0;
+        Ext.Object.each(docs, function(k, v) {
+            if (v.status === 1) countLengkap++;
+        });
+
+        html += '<div class="audit-checklist-header">' +
+                '  <div class="audit-checklist-title">' +
+                '    <i class="x-fa fa-tasks" style="color: #2563eb;"></i>' +
+                '    <span>Checklist Kelengkapan Dokumen Rekam Medis Elektronik</span>' +
+                '  </div>' +
+                '  <span class="audit-checklist-count">' + countLengkap + ' dari ' + totalDocs + ' Dokumen Lengkap</span>' +
+                '</div>';
+
+        html += '<div class="audit-docs-list">';
+        Ext.Object.each(docs, function(k, v) {
+            var m = docMeta[k] || { icon: "fa-file-text-o", desc: "Dokumen Rekam Medis Klinis Pasien" };
+            var iconCls = v.status === 1 ? "doc-icon-ok" : (v.status === 2 ? "doc-icon-warn" : "doc-icon-empty");
+            var pillCls = v.status === 1 ? "doc-pill-ok" : (v.status === 2 ? "doc-pill-warn" : "doc-pill-empty");
+            var pillText = v.status === 1 ? '<i class="x-fa fa-check"></i> Lengkap' : (v.status === 2 ? '<i class="x-fa fa-exclamation"></i> Perlu Ditinjau' : '<i class="x-fa fa-times"></i> Belum Ada');
+            var btnCls = v.status === 1 ? "" : (v.status === 2 ? "btn-doc-edit-warn" : "btn-doc-edit-empty");
+            var btnText = v.status === 1 ? '<i class="x-fa fa-folder-open-o"></i> Buka Dokumen' : (v.status === 2 ? '<i class="x-fa fa-pencil-square-o"></i> Koreksi Form' : '<i class="x-fa fa-plus-circle"></i> Lengkapi Form');
+
+            html += '<div class="audit-doc-row">' +
+                    '  <div class="doc-row-left">' +
+                    '    <div class="doc-row-icon ' + iconCls + '"><i class="x-fa ' + m.icon + '"></i></div>' +
+                    '    <div class="doc-row-meta">' +
+                    '      <div class="doc-row-name">' + Ext.String.htmlEncode(v.nama || k) + '</div>' +
+                    '      <div class="doc-row-desc">' + m.desc + '</div>' +
+                    '    </div>' +
+                    '  </div>' +
+                    '  <div class="doc-row-right">' +
+                    '    <span class="doc-pill-status ' + pillCls + '">' + pillText + '</span>' +
+                    '    <button type="button" class="btn-doc-edit ' + btnCls + '" onclick="Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onFastLaneDocClick(\'' + k + '\')">' +
+                    '      ' + btnText +
+                    '    </button>' +
+                    '  </div>' +
+                    '</div>';
+        });
+        html += '</div>';
+
+        return html;
     }
 });
 
@@ -597,6 +863,14 @@ Ext.define("auditrekammedis.Workspace", {
         if (ctrl && typeof ctrl.onSearch === "function") {
             ctrl.onSearch();
         }
+    },
+
+    getEmptyDetailHtml: function() {
+        return '<div class="audit-empty-view">' +
+               '  <div class="audit-empty-icon"><i class="x-fa fa-id-card-o"></i></div>' +
+               '  <div class="audit-empty-title">Pilih Pasien untuk Melihat Detail Audit</div>' +
+               '  <div class="audit-empty-desc">Klik salah satu baris pasien pada daftar di sebelah kiri untuk melihat checklist kelengkapan berkas rekam medis, status verifikasi klaim, deteksi anomali, serta aksi melengkapi form dokumen secara langsung.</div>' +
+               '</div>';
     },
 
     initComponent: function() {
@@ -655,7 +929,78 @@ Ext.define("auditrekammedis.Workspace", {
             '.rme-fastlane-window .x-tool-close:hover { background: #dc2626 !important; transform: scale(1.08) !important; }' +
             '.rme-fastlane-window .x-tool-img { filter: brightness(0) invert(1) !important; background-color: transparent !important; transform: scale(1.2) !important; }' +
             '.x-tab-icon-el.fa-clipboard-check { font-size: 20px !important; width: 22px !important; height: 22px !important; line-height: 22px !important; color: #1e40af !important; vertical-align: middle !important; margin-right: 6px !important; }' +
-            '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }',
+            '.x-action-col-icon { font-size: 16px !important; margin: 0 4px !important; }' +
+            // Master Grid styling
+            '.audit-master-grid .x-grid-item-selected { background-color: #e0f2fe !important; border-color: #7dd3fc !important; }' +
+            '.audit-master-grid .x-grid-item:hover { background-color: #f1f5f9 !important; cursor: pointer !important; }' +
+
+            // Detail Panel Styling
+            '.audit-detail-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 12px; }' +
+            '.audit-detail-patient-box { padding: 14px 18px; display: flex; align-items: flex-start; gap: 16px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-radius: 8px; border: 1px solid #e2e8f0; }' +
+            '.audit-detail-avatar { width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #3730a3; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }' +
+            '.audit-detail-pinfo { flex: 1; min-width: 0; }' +
+            '.audit-detail-pname { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }' +
+            '.audit-pill-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }' +
+            '.audit-pill-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }' +
+            '.audit-pill-green { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }' +
+            '.audit-pill-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }' +
+            '.audit-detail-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 12px; color: #475569; margin-top: 8px; }' +
+            '.audit-detail-meta-grid b { color: #1e293b; }' +
+            '.audit-detail-score { text-align: center; padding: 6px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 90px; }' +
+            '.audit-score-num { font-size: 26px; font-weight: 800; line-height: 30px; }' +
+            '.audit-score-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }' +
+
+            // Status Action Strip
+            '.audit-status-strip { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }' +
+            '.audit-status-indicators { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }' +
+            '.audit-status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #334155; }' +
+            '.audit-status-val { padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; }' +
+            '.val-selesai { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }' +
+            '.val-proses { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }' +
+            '.val-belum { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }' +
+            '.audit-status-btns { display: flex; align-items: center; gap: 8px; }' +
+            '.btn-act-quick { background: #16a34a; color: #ffffff; border: none; padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }' +
+            '.btn-act-quick:hover { background: #15803d; }' +
+            '.btn-act-update { background: #0284c7; color: #ffffff; border: none; padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }' +
+            '.btn-act-update:hover { background: #0369a1; }' +
+
+            // Anomaly Alert Box
+            '.audit-anomali-alert { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; }' +
+            '.audit-anomali-alert-title { font-size: 13px; font-weight: 700; color: #b91c1c; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }' +
+            '.audit-anomali-alert-list { margin: 0; padding-left: 24px; color: #991b1b; font-size: 12px; line-height: 1.6; }' +
+
+            // Checklist Section
+            '.audit-checklist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 0 4px; }' +
+            '.audit-checklist-title { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }' +
+            '.audit-checklist-count { font-size: 12px; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 3px 10px; border-radius: 12px; border: 1px solid #bfdbfe; }' +
+            '.audit-docs-list { display: flex; flex-direction: column; gap: 8px; }' +
+            '.audit-doc-row { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease; }' +
+            '.audit-doc-row:hover { border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }' +
+            '.doc-row-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }' +
+            '.doc-row-icon { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }' +
+            '.doc-icon-ok { background: #ecfdf5; color: #059669; }' +
+            '.doc-icon-warn { background: #fffbeb; color: #d97706; }' +
+            '.doc-icon-empty { background: #fef2f2; color: #dc2626; }' +
+            '.doc-row-meta { min-width: 0; flex: 1; }' +
+            '.doc-row-name { font-size: 13px; font-weight: 600; color: #0f172a; }' +
+            '.doc-row-desc { font-size: 11px; color: #64748b; margin-top: 1px; }' +
+            '.doc-row-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }' +
+            '.doc-pill-status { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }' +
+            '.doc-pill-ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }' +
+            '.doc-pill-warn { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }' +
+            '.doc-pill-empty { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }' +
+            '.btn-doc-edit { border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }' +
+            '.btn-doc-edit:hover { background: #2563eb; color: #ffffff; border-color: #2563eb; }' +
+            '.btn-doc-edit-warn { border-color: #fde68a; background: #fffbeb; color: #b45309; }' +
+            '.btn-doc-edit-warn:hover { background: #d97706; color: #ffffff; border-color: #d97706; }' +
+            '.btn-doc-edit-empty { border-color: #fca5a5; background: #fef2f2; color: #b91c1c; }' +
+            '.btn-doc-edit-empty:hover { background: #dc2626; color: #ffffff; border-color: #dc2626; }' +
+
+            // Empty state
+            '.audit-empty-view { text-align: center; padding: 60px 20px; color: #94a3b8; }' +
+            '.audit-empty-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }' +
+            '.audit-empty-title { font-size: 16px; font-weight: 700; color: #475569; margin-bottom: 6px; }' +
+            '.audit-empty-desc { font-size: 13px; color: #64748b; max-width: 400px; margin: 0 auto; line-height: 1.5; }',
             'audit-rme-custom-style'
         );
 
@@ -936,165 +1281,169 @@ Ext.define("auditrekammedis.Workspace", {
                 ]
             },
             {
-                region: "center",
+                region: "west",
                 xtype: "grid",
+                itemId: "master-patient-grid",
+                cls: "audit-master-grid",
+                title: '<i class="x-fa fa-users" style="color: #2563eb; margin-right: 6px;"></i> Daftar Pasien Audit',
+                width: 530,
+                minWidth: 420,
+                maxWidth: 750,
+                split: true,
+                collapsible: true,
+                collapseDirection: "left",
                 store: store,
-                border: false,
+                border: true,
                 columnLines: true,
+                viewConfig: {
+                    stripeRows: true,
+                    enableTextSelection: true
+                },
                 columns: [
                     {
                         text: "Pasien",
                         dataIndex: "NORM",
-                        width: 175,
+                        width: 165,
                         renderer: function(val, meta, rec) {
-                            return '<b>' + (rec.get("NAMA_PASIEN") || "-") + '</b><br>' +
-                                   '<span style="color: #64748b; font-size: 11px;">RM: ' + val + ' | ' + rec.get("JENIS_KELAMIN") + ' (' + rec.get("UMUR") + ' th)</span>';
+                            var nm = Ext.String.htmlEncode(rec.get("NAMA_PASIEN") || "-");
+                            var jk = rec.get("JENIS_KELAMIN") || "-";
+                            var umur = rec.get("UMUR") || 0;
+                            return '<div style="line-height: 1.35;">' +
+                                   '  <b style="color: #0f172a; font-size: 13px;">' + nm + '</b><br>' +
+                                   '  <span style="color: #64748b; font-size: 11px;">RM: <b style="color: #1e40af;">' + val + '</b> | ' + jk + ' (' + umur + ' th)</span>' +
+                                   '</div>';
                         }
                     },
                     {
-                        text: "Kunjungan & Ruangan",
+                        text: "Kunjungan & Ruang",
                         dataIndex: "NOPEN",
-                        width: 225,
+                        width: 175,
                         renderer: function(val, meta, rec) {
                             var tgl = rec.get("MASUK") ? Ext.Date.format(rec.get("MASUK"), "d/m/Y H:i") : "-";
-                            var nmRuangan = rec.get("NAMA_RUANGAN") || "-";
-                            var labelJk = rec.get("LABEL_JENIS_KUNJUNGAN") || "";
-                            var isHd = rec.get("JENIS_KUNJUNGAN") == 7 || 
-                                       (nmRuangan && nmRuangan.toLowerCase().indexOf("hemodial") !== -1) || 
-                                       labelJk.toLowerCase() === "hemodialisa";
+                            var nmRuangan = Ext.String.htmlEncode(rec.get("NAMA_RUANGAN") || "-");
+                            var vVal = rec.get("STATUS_VERIFIKASI_RM");
+                            var bVal = rec.get("STATUS_KELENGKAPAN_BERKAS");
+                            
+                            var vLabel = vVal === 2 ? "Selesai" : (vVal === 1 ? "Proses" : "Belum");
+                            var vBg = vVal === 2 ? "#dcfce7" : (vVal === 1 ? "#fef3c7" : "#fee2e2");
+                            var vColor = vVal === 2 ? "#15803d" : (vVal === 1 ? "#b45309" : "#b91c1c");
+                            
+                            var bLabel = bVal === 2 ? "Lengkap" : "Belum";
+                            var bBg = bVal === 2 ? "#dcfce7" : "#fee2e2";
+                            var bColor = bVal === 2 ? "#15803d" : "#b91c1c";
 
-                            var titleText = '<b>' + nmRuangan + '</b>';
-                            if (!isHd && labelJk) {
-                                titleText += ' (' + labelJk + ')';
-                            }
-
-                            var vStatus = rec.get("STATUS_VERIFIKASI_RM") !== undefined ? rec.get("STATUS_VERIFIKASI_RM") : 0;
-                            var bStatus = rec.get("STATUS_KELENGKAPAN_BERKAS") !== undefined ? rec.get("STATUS_KELENGKAPAN_BERKAS") : 1;
-
-                            var vColors = ["#d11313", "#cb7615", "#15cb69"];
-                            var vTexts = ["Belum", "Proses", "Selesai"];
-                            var bColors = { 1: "#d11313", 2: "#15cb69" };
-                            var bTexts = { 1: "Belum lengkap", 2: "Lengkap" };
-
-                            var vColor = vColors[vStatus] || "#d11313";
-                            var vText = vTexts[vStatus] || "Belum";
-                            var bColor = bColors[bStatus] || "#d11313";
-                            var bText = bTexts[bStatus] || "Belum lengkap";
-
-                            var recId = rec.getId();
-                            var clickAction = 'Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onOpenStatusDialog(Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].down(\'grid\').getStore().getById(\'' + recId + '\'))';
-
-                            var badgeVerif = '<span style="display:inline-block; border-radius:3px; overflow:hidden; border:1px solid ' + vColor + '; font-size:10px; margin-top:4px; margin-right:4px; vertical-align:middle; cursor:pointer;" onclick="' + clickAction + '" title="Klik untuk ubah status Verifikasi RM">' +
-                                             '<span style="background:' + vColor + '; color:#fff; padding:1px 4px; font-weight:600;">Verifikasi RM</span>' +
-                                             '<span style="background:#fff; color:' + vColor + '; padding:1px 4px; font-weight:bold;">' + vText + '</span></span>';
-
-                            var badgeBerkas = '<span style="display:inline-block; border-radius:3px; overflow:hidden; border:1px solid ' + bColor + '; font-size:10px; margin-top:4px; vertical-align:middle; cursor:pointer;" onclick="' + clickAction + '" title="Klik untuk ubah status Kelengkapan Berkas">' +
-                                              '<span style="background:' + bColor + '; color:#fff; padding:1px 4px; font-weight:600;">Kelengkapan Berkas</span>' +
-                                              '<span style="background:#fff; color:' + bColor + '; padding:1px 4px; font-weight:bold;">' + bText + '</span></span>';
-
-                            return titleText + '<br>' +
-                                   '<span style="color: #64748b; font-size: 11px;">Reg: ' + val + ' | ' + tgl + '</span><br>' +
-                                   badgeVerif + badgeBerkas;
+                            return '<div style="line-height: 1.35;">' +
+                                   '  <b style="color: #1e293b; font-size: 11px;">' + nmRuangan + '</b><br>' +
+                                   '  <span style="color: #64748b; font-size: 10px;">Reg: ' + val + ' | ' + tgl + '</span><br>' +
+                                   '  <div style="margin-top: 3px; display: flex; gap: 4px; flex-wrap: wrap;">' +
+                                   '    <span style="font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background:' + vBg + '; color:' + vColor + '; border:1px solid ' + vColor + ';">VRM: ' + vLabel + '</span>' +
+                                   '    <span style="font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background:' + bBg + '; color:' + bColor + '; border:1px solid ' + bColor + ';">Klaim: ' + bLabel + '</span>' +
+                                   '  </div>' +
+                                   '</div>';
                         }
                     },
                     {
                         text: "DPJP",
                         dataIndex: "NAMA_DPJP",
-                        width: 180,
+                        width: 105,
                         renderer: function(val) {
-                            return '<span style="font-size: 11px; font-weight: 500;">' + (val || "-") + '</span>';
+                            return '<span style="font-size: 11px; color: #334155; font-weight: 500;">' + Ext.String.htmlEncode(val || "-") + '</span>';
                         }
                     },
                     {
-                        text: "Kelengkapan",
+                        text: "Kepatuhan",
                         dataIndex: "PERSENTASE",
-                        width: 130,
-                        align: "center",
-                        renderer: function(val) {
-                            var color = val >= 100 ? "#16a34a" : (val >= 75 ? "#eab308" : (val >= 40 ? "#f97316" : "#dc2626"));
-                            return '<div class="progress-bar-bg">' +
-                                   '<div class="progress-bar-fill" style="width: ' + val + '%; background: ' + color + ';">' + val + '%</div>' +
-                                   '</div>';
-                        }
-                    },
-                    {
-                        text: "Status & Anomali",
-                        dataIndex: "JUMLAH_ANOMALI",
-                        width: 140,
-                        align: "center",
-                        renderer: function(val, meta, rec) {
-                            if (val > 0) {
-                                return '<span class="badge-anomali badge-anomali-alert" onclick="Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].getController().onShowAnomaliModal(Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].down(\'grid\').getStore().getById(\'' + rec.getId() + '\'))">' +
-                                       '<i class="x-fa fa-exclamation-triangle"></i> ' + val + ' Anomali</span>';
-                            }
-                            if (rec.get("PERSENTASE") >= 100) {
-                                return '<span class="badge-anomali badge-anomali-valid"><i class="x-fa fa-check"></i> Lengkap</span>';
-                            }
-                            return '<span class="badge-anomali badge-anomali-pending"><i class="x-fa fa-clock-o"></i> Belum Lengkap</span>';
-                        }
-                    },
-                    {
-                        text: "Dokumen Rekam Medis",
-                        dataIndex: "DOCS_STATUS",
                         flex: 1,
-                        renderer: function(val, meta, rec) {
-                            if (!val) return "-";
-                            var html = "";
-                            var ctrlName = "Ext.ComponentQuery.query('auditrekammedis-workspace')[0].getController()";
-                            var recId = rec.getId();
-
-                            Ext.Object.each(val, function(k, v) {
-                                var cls = v.status === 1 ? "doc-chip-ok" : (v.status === 2 ? "doc-chip-warn" : "doc-chip-empty");
-                                var icon = v.status === 1 ? "fa-check" : (v.status === 2 ? "fa-exclamation" : "fa-times");
-                                html += '<span class="doc-chip ' + cls + '" onclick="' + ctrlName + '.openFastLaneEdit(Ext.ComponentQuery.query(\'auditrekammedis-workspace\')[0].down(\'grid\').getStore().getById(\'' + recId + '\'), \'' + k + '\')" title="Klik untuk melengkapi/koreksi ' + v.nama + '">' +
-                                        '<i class="x-fa ' + icon + '"></i> ' + v.nama + '</span> ';
-                            });
-                            return html;
-                        }
-                    },
-                    {
-                        xtype: "actioncolumn",
-                        text: "Aksi",
-                        width: 85,
+                        minWidth: 80,
                         align: "center",
-                        items: [
-                            {
-                                iconCls: "x-fa fa-check-square-o x-color-green",
-                                tooltip: "Update Status Verifikasi RM & Kelengkapan Berkas",
-                                handler: function(grid, rowIndex) {
-                                    var rec = grid.getStore().getAt(rowIndex);
-                                    me.getController().onOpenStatusDialog(rec);
-                                }
-                            },
-                            {
-                                iconCls: "x-fa fa-edit x-color-blue",
-                                tooltip: "Edit Resume Medis",
-                                handler: function(grid, rowIndex) {
-                                    var rec = grid.getStore().getAt(rowIndex);
-                                    me.getController().openFastLaneEdit(rec, "RESUME");
-                                }
-                            },
-                            {
-                                iconCls: "x-fa fa-exclamation-circle x-color-red",
-                                tooltip: "Lihat Detail Anomali",
-                                isDisabled: function(view, rowIdx, colIdx, item, rec) {
-                                    return (rec.get("JUMLAH_ANOMALI") || 0) === 0;
-                                },
-                                handler: function(grid, rowIndex) {
-                                    var rec = grid.getStore().getAt(rowIndex);
-                                    me.getController().onShowAnomaliModal(rec);
-                                }
+                        renderer: function(val, meta, rec) {
+                            var color = val >= 100 ? "#16a34a" : (val >= 75 ? "#eab308" : (val >= 40 ? "#f97316" : "#dc2626"));
+                            var anomali = rec.get("JUMLAH_ANOMALI") || 0;
+                            var anomaliBadge = "";
+                            if (anomali > 0) {
+                                anomaliBadge = '<div style="margin-top: 3px;"><span class="badge-anomali badge-anomali-alert" style="padding: 1px 6px; font-size: 9px;"><i class="x-fa fa-exclamation-triangle"></i> ' + anomali + '</span></div>';
                             }
-                        ]
+                            return '<div class="progress-bar-bg" style="height: 14px; margin-top: 2px;">' +
+                                   '  <div class="progress-bar-fill" style="width: ' + val + '%; background: ' + color + '; line-height: 14px; font-size: 9px;">' + val + '%</div>' +
+                                   '</div>' + anomaliBadge;
+                        }
                     }
                 ],
                 bbar: {
                     xtype: "pagingtoolbar",
                     store: store,
                     displayInfo: true,
-                    displayMsg: "Menampilkan data {0} - {1} dari total {2} kunjungan",
-                    emptyMsg: "Tidak ada data audit untuk kriteria filter ini"
+                    displayMsg: "{0}-{1} dari {2}",
+                    emptyMsg: "Tidak ada data"
+                },
+                listeners: {
+                    selectionchange: function(sm, selected) {
+                        if (selected && selected.length > 0) {
+                            me.getController().onSelectPatient(selected[0]);
+                        }
+                    },
+                    rowclick: function(grid, record) {
+                        me.getController().onSelectPatient(record);
+                    }
                 }
+            },
+            {
+                region: "center",
+                xtype: "panel",
+                itemId: "detail-audit-panel",
+                title: '<i class="x-fa fa-clipboard-check" style="color: #2563eb; margin-right: 6px;"></i> Detail Kelengkapan Rekam Medis & Fast-Lane Verifikasi',
+                border: true,
+                layout: "fit",
+                bodyStyle: "background: #f8fafc;",
+                tbar: [
+                    {
+                        xtype: "component",
+                        itemId: "detail-header-info",
+                        html: '<span style="color: #64748b; font-size: 12px; font-weight: 500;">Pilih pasien di sebelah kiri</span>'
+                    },
+                    "->",
+                    {
+                        text: '<i class="x-fa fa-check-circle"></i> <b>Tandai Selesai & Lengkap</b>',
+                        itemId: "btn-quick-complete",
+                        ui: "soft-green",
+                        disabled: true,
+                        tooltip: "Tandai Verifikasi RM Selesai dan Berkas Lengkap sekaligus",
+                        handler: function() {
+                            me.getController().onQuickCompleteCurrent();
+                        }
+                    },
+                    {
+                        text: "Update Status",
+                        itemId: "btn-open-status",
+                        iconCls: "x-fa fa-check-square-o",
+                        ui: "soft-blue",
+                        disabled: true,
+                        tooltip: "Buka dialog penyesuaian Status Verifikasi & Berkas",
+                        handler: function() {
+                            me.getController().onOpenStatusDialogCurrent();
+                        }
+                    },
+                    {
+                        text: "Anomali",
+                        itemId: "btn-show-anomali",
+                        iconCls: "x-fa fa-exclamation-triangle",
+                        ui: "soft-red",
+                        disabled: true,
+                        tooltip: "Lihat rincian catatan anomali pasien",
+                        handler: function() {
+                            me.getController().onShowAnomaliModalCurrent();
+                        }
+                    }
+                ],
+                items: [
+                    {
+                        xtype: "container",
+                        itemId: "detail-scroll-container",
+                        scrollable: "y",
+                        padding: 16,
+                        html: me.getEmptyDetailHtml()
+                    }
+                ]
             }
         ];
 
